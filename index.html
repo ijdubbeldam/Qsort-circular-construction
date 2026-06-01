@@ -300,6 +300,7 @@ body{font-family:'Outfit',sans-serif;background:var(--stone);color:var(--ink);fo
 .q-num{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px;display:flex;align-items:center;gap:6px}
 .q-num .req{color:var(--rust);font-size:13px;line-height:1}
 .q-question-text{font-family:'Playfair Display',serif;font-size:15px;font-weight:400;color:var(--ink);line-height:1.5;margin-bottom:12px}
+.dutch-note{display:block;font-family:'Outfit',sans-serif;font-size:12px;font-weight:400;font-style:normal;color:var(--forest-2);margin-top:5px;letter-spacing:0}
 .q-card textarea{width:100%;min-height:90px;padding:11px 14px;border:1.5px solid var(--border);border-radius:3px;font-family:'Outfit',sans-serif;font-size:13.5px;font-weight:300;color:var(--ink);background:var(--stone);outline:none;resize:vertical;transition:border-color .2s,background .2s;line-height:1.65}
 .q-card textarea:focus{border-color:var(--forest);background:var(--white)}
 .q-card textarea::placeholder{color:var(--ink-3)}
@@ -512,8 +513,8 @@ body{font-family:'Outfit',sans-serif;background:var(--stone);color:var(--ink);fo
     </div>
     <div class="q-card">
       <div class="q-num">Question 1 of 3 <span class="req">*</span></div>
-      <div class="q-question-text">Why did you rank these statements high?</div>
-      <textarea id="answerHigh" placeholder="Describe your reasoning…"></textarea>
+      <div class="q-question-text">Why did you rank these statements high? <span class="dutch-note">Je mag ook in het Nederlands antwoorden.</span></div>
+      <textarea id="answerHigh" placeholder="Describe your reasoning… / Beschrijf je redenering…"></textarea>
       <div class="q-error" id="errHigh">Please answer this question before continuing.</div>
     </div>
     <div class="preview-band" style="margin-top:20px">
@@ -522,14 +523,14 @@ body{font-family:'Outfit',sans-serif;background:var(--stone);color:var(--ink);fo
     </div>
     <div class="q-card">
       <div class="q-num">Question 2 of 3 <span class="req">*</span></div>
-      <div class="q-question-text">Why did you rank these statements low?</div>
-      <textarea id="answerLow" placeholder="Describe your reasoning…"></textarea>
+      <div class="q-question-text">Why did you rank these statements low? <span class="dutch-note">Je mag ook in het Nederlands antwoorden.</span></div>
+      <textarea id="answerLow" placeholder="Describe your reasoning… / Beschrijf je redenering…"></textarea>
       <div class="q-error" id="errLow">Please answer this question before continuing.</div>
     </div>
     <div class="q-card" style="margin-top:20px">
       <div class="q-num">Question 3 of 3 <span class="req">*</span></div>
-      <div class="q-question-text">Do you experience other barriers to circularity that were not mentioned in the statements?</div>
-      <textarea id="answerOther" placeholder="Any additional barriers you'd like to mention…" style="min-height:120px"></textarea>
+      <div class="q-question-text">Do you experience other barriers to circularity that were not mentioned in the statements? <span class="dutch-note">Je mag ook in het Nederlands antwoorden.</span></div>
+      <textarea id="answerOther" placeholder="Any additional barriers… / Eventuele andere barrières…" style="min-height:120px"></textarea>
       <div class="q-error" id="errOther">Please answer this question before continuing.</div>
     </div>
     <button class="btn-to-done" onclick="goToDone()">Continue to submission <span>→</span></button>
@@ -585,21 +586,21 @@ const STATEMENTS = [
   {id:"D4",  cat:"Design",      text:"Circular design requires too much coordination between too many actors."},
   {id:"D5",  cat:"Design",      text:"Circular design increases upfront complexity and costs in project development."},
   {id:"PR1", cat:"Production",  text:"Construction processes are still optimized for linear, conventional building methods."},
-  {id:"PR2", cat:"Production",  text:"Circular ambitions often weaken when a project moves from development to execution."},
+  {id:"PR2", cat:"Production",  text:"Circular project ambitions are often weakened when contractors and designers start to defend their own interests."},
   {id:"PR3", cat:"Production",  text:"The supply chain is not ready to deliver circular construction on scale."},
   {id:"PR4", cat:"Production",  text:"Production of circular buildings requires changes that project developers cannot control."},
   {id:"PR5", cat:"Production",  text:"Fragmented responsibilities make circular production coordination impossible."},
   {id:"M1",  cat:"Market",      text:"There is not enough market demand for circular buildings."},
-  {id:"M2",  cat:"Market",      text:"Project developers take circularity less seriously when buyers don't value it."},
+  {id:"M2",  cat:"Market",      text:"Project developers take circularity less seriously when tenants don't value it."},
   {id:"M3",  cat:"Market",      text:"The market rewards low-cost conventional buildings, not circular ones."},
   {id:"M4",  cat:"Market",      text:"Circular buildings are hard to sell because their benefits are not visible upfront."},
   {id:"M5",  cat:"Market",      text:"Market uncertainty makes project developers hesitant to invest in circularity."},
   {id:"L1",  cat:"Logistics",   text:"It is difficult to match demolition materials with new construction timing."},
-  {id:"L2",  cat:"Logistics",   text:"There is no reliable infrastructure for storing and distributing reused components."},
-  {id:"L3",  cat:"Logistics",   text:"Logistical uncertainties make circular materials too risky for project developers."},
-  {id:"L4",  cat:"Logistics",   text:"Project developers cannot solve coordination problems between demolition and construction."},
+  {id:"L2",  cat:"Logistics",   text:"Project developers cannot rely on the supply chain to make circular construction easy to realize."},
+  {id:"L3",  cat:"Logistics",   text:"Logistical uncertainties make circular construction too risky for project developers."},
+  {id:"L4",  cat:"Logistics",   text:"Project developers are forced to deal with coordination problems that should be solved earlier in the chain."},
   {id:"L5",  cat:"Logistics",   text:"Circular logistics add complexity to project planning."},
-  {id:"F1",  cat:"Financial",   text:"Circular construction has higher upfront costs that scare off investors."},
+  {id:"F1",  cat:"Financial",   text:"Circular construction has higher upfront costs that make investors hesitant."},
   {id:"F2",  cat:"Financial",   text:"It is difficult to build a solid business case for circular projects."},
   {id:"F3",  cat:"Financial",   text:"Investors see circularity as financially risky compared to conventional building."},
   {id:"F4",  cat:"Financial",   text:"Circular buildings have uncertain resale or rental value."},
@@ -607,9 +608,9 @@ const STATEMENTS = [
   {id:"PO1", cat:"Policy",      text:"Current building regulations do not support circular construction."},
   {id:"PO2", cat:"Policy",      text:"Public authorities provide few clear incentives for circular projects."},
   {id:"PO3", cat:"Policy",      text:"Policy is inconsistent, making circular project development unpredictable."},
-  {id:"PO4", cat:"Policy",      text:"Project developers cannot be expected to innovate when rules favour conventional building."},
+  {id:"PO4", cat:"Policy",      text:"Project developers cannot be expected to innovate when rules favor conventional building."},
   {id:"PO5", cat:"Policy",      text:"Government procurement still prioritizes linear construction practices."},
-  {id:"R1",  cat:"Resources",   text:"Project developers lack the knowledge to specify circular requirements."},
+  {id:"R1",  cat:"Resources",   text:"There is a lack of circular knowledge to specify circular requirements."},
   {id:"R2",  cat:"Resources",   text:"There are few experts who understand circular construction well enough."},
   {id:"R3",  cat:"Resources",   text:"Circular projects require more time and resources than project developers have."},
   {id:"R4",  cat:"Resources",   text:"Most project development teams have no experience with circularity."},
