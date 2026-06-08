@@ -338,6 +338,23 @@ body{font-family:'Outfit',sans-serif;background:var(--stone);color:var(--ink);fo
 .preview-csv{padding:14px 18px;font-family:'Courier New',monospace;font-size:11px;color:var(--ink-2);white-space:pre;overflow-x:auto;max-height:200px;overflow-y:auto;background:var(--stone);line-height:1.6}
 .btn-restart{padding:10px 20px;background:transparent;color:var(--ink-3);border:1.5px solid var(--border);border-radius:3px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;letter-spacing:.04em}
 .btn-restart:hover{border-color:var(--ink-3);color:var(--ink)}
+
+/* Spinner */
+.done-spinner-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:40px 0}
+.done-spinner{width:44px;height:44px;border:3px solid var(--forest-3);border-top-color:var(--forest);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.done-spinner-label{font-size:13px;color:var(--ink-3)}
+
+/* Success box */
+.done-success-box{display:flex;align-items:center;gap:16px;background:var(--forest-3);border:1.5px solid var(--forest);border-radius:4px;padding:18px 20px;margin-bottom:8px}
+.done-success-icon{flex-shrink:0}
+.done-success-title{font-size:14px;font-weight:600;color:var(--forest);margin-bottom:3px}
+.done-success-desc{font-size:13px;color:var(--forest-2)}
+
+/* Error box */
+.done-error-box{background:var(--rust-2);border:1.5px solid var(--rust);border-radius:4px;padding:16px 20px;margin-bottom:4px}
+.done-error-title{font-size:13px;font-weight:600;color:var(--rust);margin-bottom:4px}
+.done-error-desc{font-size:13px;color:var(--ink-2);line-height:1.55}
 </style>
 </head>
 <body>
@@ -540,38 +557,91 @@ body{font-family:'Outfit',sans-serif;background:var(--stone);color:var(--ink);fo
 <!-- ══════ DONE ══════ -->
 <div id="done" class="screen">
   <div class="done-wrap">
-    <div class="done-hero">
-      <div class="eyebrow">Q-Sort complete</div>
-      <h2>Thank<br><em>you.</em></h2>
-      <p>Your sort data and answers are ready. Please follow these two steps to share your results with the researcher.</p>
-    </div>
-    <div class="done-steps">
-      <div class="done-step">
-        <div class="done-step-num">1</div>
-        <div class="done-step-body">
-          <div class="done-step-title">Download your results</div>
-          <div class="done-step-desc">Click the button below to save a CSV file with your complete sort scores and all three answers.</div>
-          <button class="btn-download" onclick="downloadCSV()">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Download results (.csv)
-          </button>
-        </div>
+
+    <!-- SENDING STATE -->
+    <div id="doneSending" style="display:none">
+      <div class="done-hero">
+        <div class="eyebrow">Sending results…</div>
+        <h2>Almost<br><em>there.</em></h2>
+        <p>Your results are being sent automatically. Please wait a moment.</p>
       </div>
-      <div class="done-step">
-        <div class="done-step-num">2</div>
-        <div class="done-step-body">
-          <div class="done-step-title">E-mail the file to the researcher</div>
-          <div class="done-step-desc">Attach the downloaded file to an e-mail and send it to:</div>
-          <a class="email-chip" href="mailto:ijse.dubbeldam@student.hu.nl?subject=Q-Sort Results – Circular Construction">ijse.dubbeldam@student.hu.nl</a>
-          <div class="done-step-desc" style="margin-top:8px;font-size:12px;color:var(--ink-3)">Clicking the address opens your mail application automatically.</div>
-        </div>
+      <div class="done-spinner-wrap">
+        <div class="done-spinner"></div>
+        <div class="done-spinner-label">Sending to researcher…</div>
       </div>
     </div>
-    <details class="done-preview">
-      <summary>Preview your results</summary>
-      <div class="preview-csv" id="copyArea"></div>
-    </details>
-    <button class="btn-restart" onclick="resetSort()">← Start over</button>
+
+    <!-- SUCCESS STATE -->
+    <div id="doneSuccess" style="display:none">
+      <div class="done-hero">
+        <div class="eyebrow">Q-Sort complete</div>
+        <h2>Thank<br><em>you!</em></h2>
+        <p>Your results have been sent automatically to the researcher. You don't need to do anything else — you're done!</p>
+      </div>
+      <div class="done-success-box">
+        <div class="done-success-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="13" stroke="var(--forest)" stroke-width="1.5"/><path d="M8 14l4 4 8-8" stroke="var(--forest)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <div class="done-success-title">Results sent successfully</div>
+          <div class="done-success-desc">Sent to <strong>ijse.dubbeldam@student.hu.nl</strong></div>
+        </div>
+      </div>
+      <details class="done-preview" style="margin-top:20px">
+        <summary>Preview your results</summary>
+        <div class="preview-csv" id="copyArea"></div>
+      </details>
+      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+        <button class="btn-download" onclick="downloadCSV()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Download backup (.csv)
+        </button>
+        <button class="btn-restart" onclick="resetSort()">← Start over</button>
+      </div>
+    </div>
+
+    <!-- ERROR STATE -->
+    <div id="doneError" style="display:none">
+      <div class="done-hero">
+        <div class="eyebrow">Sending failed</div>
+        <h2>Almost<br><em>done.</em></h2>
+        <p>The automatic submission didn't work (no internet connection?). Please download your results and e-mail them manually.</p>
+      </div>
+      <div class="done-error-box">
+        <div class="done-error-title">⚠ Automatic sending failed</div>
+        <div class="done-error-desc">Please use one of the options below to send your results to the researcher.</div>
+      </div>
+      <div class="done-steps" style="margin-top:16px">
+        <div class="done-step">
+          <div class="done-step-num">1</div>
+          <div class="done-step-body">
+            <div class="done-step-title">Download your results</div>
+            <div class="done-step-desc">Save a CSV file with your complete sort scores and answers.</div>
+            <button class="btn-download" onclick="downloadCSV()">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Download results (.csv)
+            </button>
+          </div>
+        </div>
+        <div class="done-step">
+          <div class="done-step-num">2</div>
+          <div class="done-step-body">
+            <div class="done-step-title">E-mail the file to the researcher</div>
+            <div class="done-step-desc">Attach the downloaded file and send to:</div>
+            <a class="email-chip" href="mailto:ijse.dubbeldam@student.hu.nl?subject=Q-Sort Results – Circular Construction">ijse.dubbeldam@student.hu.nl</a>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn-download" style="background:var(--ink-2)" onclick="retrySubmit()">↺ Try sending again</button>
+      </div>
+      <details class="done-preview" style="margin-top:16px">
+        <summary>Preview your results</summary>
+        <div class="preview-csv" id="copyAreaError"></div>
+      </details>
+      <button class="btn-restart" onclick="resetSort()" style="margin-top:12px">← Start over</button>
+    </div>
+
   </div>
 </div>
 
@@ -1167,6 +1237,67 @@ function goToDone() {
   if (!ok) { document.querySelector('.q-card textarea.invalid')?.scrollIntoView({behavior:'smooth',block:'center'}); return; }
   buildResults();
   showScreen('done');
+  // Show sending state, then submit
+  showDoneState('sending');
+  submitToFormspree();
+}
+
+// ─── FORMSPREE SETUP ─────────────────────────────────────────────
+// Steps to activate:
+// 1. Go to https://formspree.io and sign up for free
+// 2. Click "New Form", name it "Q-Sort Results", set email to ijse.dubbeldam@student.hu.nl
+// 3. Copy the form endpoint — it looks like: https://formspree.io/f/abcdefgh
+// 4. Paste it below replacing YOUR_FORMSPREE_ID
+// ─────────────────────────────────────────────────────────────────
+const FORMSPREE_URL = 'https://formspree.io/f/mvznarpk';
+
+function showDoneState(state) {
+  ['doneSending','doneSuccess','doneError'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById('done'+state.charAt(0).toUpperCase()+state.slice(1)).style.display = 'block';
+}
+
+async function submitToFormspree() {
+  try {
+    const ts   = new Date().toISOString();
+    const rows = STATEMENTS.map(s => {
+      const p = placements[s.id];
+      return `${s.id},${p?COLUMNS[p.ci].value:'?'},${s.cat}`;
+    }).join('\n');
+
+    const body = new FormData();
+    body.append('_subject', `Q-Sort Results – ${ts.slice(0,10)}`);
+    body.append('timestamp', ts);
+    body.append('scores', rows);
+    body.append('q1_high_ranked', document.getElementById('answerHigh').value.trim());
+    body.append('q2_low_ranked',  document.getElementById('answerLow').value.trim());
+    body.append('q3_other_barriers', document.getElementById('answerOther').value.trim());
+    body.append('full_csv', window._csvData || '');
+
+    const res = await fetch(FORMSPREE_URL, {
+      method: 'POST',
+      body,
+      headers: { 'Accept': 'application/json' }
+    });
+
+    if (res.ok) {
+      showDoneState('success');
+    } else {
+      console.error('Formspree error', res.status);
+      showDoneState('error');
+      document.getElementById('copyAreaError').textContent = window._csvData || '';
+    }
+  } catch(err) {
+    console.error('Submit failed', err);
+    showDoneState('error');
+    document.getElementById('copyAreaError').textContent = window._csvData || '';
+  }
+}
+
+function retrySubmit() {
+  showDoneState('sending');
+  submitToFormspree();
 }
 
 function buildResults() {
