@@ -302,6 +302,10 @@ body{font-family:'Outfit',sans-serif;background:var(--stone);color:var(--ink);fo
 .q-question-text{font-family:'Playfair Display',serif;font-size:15px;font-weight:400;color:var(--ink);line-height:1.5;margin-bottom:12px}
 .dutch-note{display:block;font-family:'Outfit',sans-serif;font-size:12px;font-weight:400;font-style:normal;color:var(--forest-2);margin-top:5px;letter-spacing:0}
 .q-card textarea{width:100%;min-height:90px;padding:11px 14px;border:1.5px solid var(--border);border-radius:3px;font-family:'Outfit',sans-serif;font-size:13.5px;font-weight:300;color:var(--ink);background:var(--stone);outline:none;resize:vertical;transition:border-color .2s,background .2s;line-height:1.65}
+.q-text-input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:3px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:400;color:var(--ink);background:var(--stone);outline:none;transition:border-color .2s,background .2s}
+.q-text-input:focus{border-color:var(--forest);background:var(--white)}
+.q-text-input::placeholder{color:var(--ink-3)}
+.q-text-input.invalid{border-color:var(--rust);background:var(--rust-2)}
 .q-card textarea:focus{border-color:var(--forest);background:var(--white)}
 .q-card textarea::placeholder{color:var(--ink-3)}
 .q-card textarea.invalid{border-color:var(--rust);background:var(--rust-2)}
@@ -338,6 +342,23 @@ body{font-family:'Outfit',sans-serif;background:var(--stone);color:var(--ink);fo
 .preview-csv{padding:14px 18px;font-family:'Courier New',monospace;font-size:11px;color:var(--ink-2);white-space:pre;overflow-x:auto;max-height:200px;overflow-y:auto;background:var(--stone);line-height:1.6}
 .btn-restart{padding:10px 20px;background:transparent;color:var(--ink-3);border:1.5px solid var(--border);border-radius:3px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;letter-spacing:.04em}
 .btn-restart:hover{border-color:var(--ink-3);color:var(--ink)}
+
+/* Spinner */
+.done-spinner-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:40px 0}
+.done-spinner{width:44px;height:44px;border:3px solid var(--forest-3);border-top-color:var(--forest);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.done-spinner-label{font-size:13px;color:var(--ink-3)}
+
+/* Success box */
+.done-success-box{display:flex;align-items:center;gap:16px;background:var(--forest-3);border:1.5px solid var(--forest);border-radius:4px;padding:18px 20px;margin-bottom:8px}
+.done-success-icon{flex-shrink:0}
+.done-success-title{font-size:14px;font-weight:600;color:var(--forest);margin-bottom:3px}
+.done-success-desc{font-size:13px;color:var(--forest-2)}
+
+/* Error box */
+.done-error-box{background:var(--rust-2);border:1.5px solid var(--rust);border-radius:4px;padding:16px 20px;margin-bottom:4px}
+.done-error-title{font-size:13px;font-weight:600;color:var(--rust);margin-bottom:4px}
+.done-error-desc{font-size:13px;color:var(--ink-2);line-height:1.55}
 </style>
 </head>
 <body>
@@ -504,15 +525,24 @@ body{font-family:'Outfit',sans-serif;background:var(--stone);color:var(--ink);fo
       <button class="btn-back" onclick="showScreen('sort')" style="margin-bottom:16px"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Back to grid</button>
       <div class="eyebrow">Step 3 of 3 — Follow-up questions</div>
       <h2>Almost <em>done.</em></h2>
-      <p>Please answer all three questions — they help interpret your sort. Your answers will be included in the file you download.</p>
-      <p class="required-note">All three questions are required.</p>
+      <p>Please answer all four questions — they help interpret your sort. Your answers will be included in the submitted results.</p>
+      <p class="required-note">All four questions are required.</p>
     </div>
-    <div class="preview-band">
+
+    <!-- Company question -->
+    <div class="q-card">
+      <div class="q-num">Question 1 of 4 <span class="req">*</span></div>
+      <div class="q-question-text">Which company do you work for? <span class="dutch-note">Bij welk bedrijf bent u werkzaam?</span></div>
+      <input type="text" id="answerCompany" class="q-text-input" placeholder="Company name / Bedrijfsnaam">
+      <div class="q-error" id="errCompany">Please fill in your company name before continuing.</div>
+    </div>
+
+    <div class="preview-band" style="margin-top:20px">
       <div class="preview-band-title">Your highest-ranked statements (+3 and +4)</div>
       <ul class="preview-list" id="highList"></ul>
     </div>
     <div class="q-card">
-      <div class="q-num">Question 1 of 3 <span class="req">*</span></div>
+      <div class="q-num">Question 2 of 4 <span class="req">*</span></div>
       <div class="q-question-text">Why did you rank these statements high? <span class="dutch-note">Je mag ook in het Nederlands antwoorden.</span></div>
       <textarea id="answerHigh" placeholder="Describe your reasoning… / Beschrijf je redenering…"></textarea>
       <div class="q-error" id="errHigh">Please answer this question before continuing.</div>
@@ -522,13 +552,13 @@ body{font-family:'Outfit',sans-serif;background:var(--stone);color:var(--ink);fo
       <ul class="preview-list" id="lowList"></ul>
     </div>
     <div class="q-card">
-      <div class="q-num">Question 2 of 3 <span class="req">*</span></div>
+      <div class="q-num">Question 3 of 4 <span class="req">*</span></div>
       <div class="q-question-text">Why did you rank these statements low? <span class="dutch-note">Je mag ook in het Nederlands antwoorden.</span></div>
       <textarea id="answerLow" placeholder="Describe your reasoning… / Beschrijf je redenering…"></textarea>
       <div class="q-error" id="errLow">Please answer this question before continuing.</div>
     </div>
     <div class="q-card" style="margin-top:20px">
-      <div class="q-num">Question 3 of 3 <span class="req">*</span></div>
+      <div class="q-num">Question 4 of 4 <span class="req">*</span></div>
       <div class="q-question-text">Do you experience other barriers to circularity that were not mentioned in the statements? <span class="dutch-note">Je mag ook in het Nederlands antwoorden.</span></div>
       <textarea id="answerOther" placeholder="Any additional barriers… / Eventuele andere barrières…" style="min-height:120px"></textarea>
       <div class="q-error" id="errOther">Please answer this question before continuing.</div>
@@ -540,38 +570,91 @@ body{font-family:'Outfit',sans-serif;background:var(--stone);color:var(--ink);fo
 <!-- ══════ DONE ══════ -->
 <div id="done" class="screen">
   <div class="done-wrap">
-    <div class="done-hero">
-      <div class="eyebrow">Q-Sort complete</div>
-      <h2>Thank<br><em>you.</em></h2>
-      <p>Your sort data and answers are ready. Please follow these two steps to share your results with the researcher.</p>
-    </div>
-    <div class="done-steps">
-      <div class="done-step">
-        <div class="done-step-num">1</div>
-        <div class="done-step-body">
-          <div class="done-step-title">Download your results</div>
-          <div class="done-step-desc">Click the button below to save a CSV file with your complete sort scores and all three answers.</div>
-          <button class="btn-download" onclick="downloadCSV()">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Download results (.csv)
-          </button>
-        </div>
+
+    <!-- SENDING STATE -->
+    <div id="doneSending" style="display:none">
+      <div class="done-hero">
+        <div class="eyebrow">Sending results…</div>
+        <h2>Almost<br><em>there.</em></h2>
+        <p>Your results are being sent automatically. Please wait a moment.</p>
       </div>
-      <div class="done-step">
-        <div class="done-step-num">2</div>
-        <div class="done-step-body">
-          <div class="done-step-title">E-mail the file to the researcher</div>
-          <div class="done-step-desc">Attach the downloaded file to an e-mail and send it to:</div>
-          <a class="email-chip" href="mailto:ijse.dubbeldam@student.hu.nl?subject=Q-Sort Results – Circular Construction">ijse.dubbeldam@student.hu.nl</a>
-          <div class="done-step-desc" style="margin-top:8px;font-size:12px;color:var(--ink-3)">Clicking the address opens your mail application automatically.</div>
-        </div>
+      <div class="done-spinner-wrap">
+        <div class="done-spinner"></div>
+        <div class="done-spinner-label">Sending to researcher…</div>
       </div>
     </div>
-    <details class="done-preview">
-      <summary>Preview your results</summary>
-      <div class="preview-csv" id="copyArea"></div>
-    </details>
-    <button class="btn-restart" onclick="resetSort()">← Start over</button>
+
+    <!-- SUCCESS STATE -->
+    <div id="doneSuccess" style="display:none">
+      <div class="done-hero">
+        <div class="eyebrow">Q-Sort complete</div>
+        <h2>Thank<br><em>you!</em></h2>
+        <p>Your results have been sent automatically to the researcher. You don't need to do anything else — you're done!</p>
+      </div>
+      <div class="done-success-box">
+        <div class="done-success-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="13" stroke="var(--forest)" stroke-width="1.5"/><path d="M8 14l4 4 8-8" stroke="var(--forest)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <div class="done-success-title">Results sent successfully</div>
+          <div class="done-success-desc">Sent to <strong>ijse.dubbeldam@student.hu.nl</strong></div>
+        </div>
+      </div>
+      <details class="done-preview" style="margin-top:20px">
+        <summary>Preview your results</summary>
+        <div class="preview-csv" id="copyArea"></div>
+      </details>
+      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+        <button class="btn-download" onclick="downloadCSV()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Download backup (.csv)
+        </button>
+        <button class="btn-restart" onclick="resetSort()">← Start over</button>
+      </div>
+    </div>
+
+    <!-- ERROR STATE -->
+    <div id="doneError" style="display:none">
+      <div class="done-hero">
+        <div class="eyebrow">Sending failed</div>
+        <h2>Almost<br><em>done.</em></h2>
+        <p>The automatic submission didn't work (no internet connection?). Please download your results and e-mail them manually.</p>
+      </div>
+      <div class="done-error-box">
+        <div class="done-error-title">⚠ Automatic sending failed</div>
+        <div class="done-error-desc">Please use one of the options below to send your results to the researcher.</div>
+      </div>
+      <div class="done-steps" style="margin-top:16px">
+        <div class="done-step">
+          <div class="done-step-num">1</div>
+          <div class="done-step-body">
+            <div class="done-step-title">Download your results</div>
+            <div class="done-step-desc">Save a CSV file with your complete sort scores and answers.</div>
+            <button class="btn-download" onclick="downloadCSV()">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Download results (.csv)
+            </button>
+          </div>
+        </div>
+        <div class="done-step">
+          <div class="done-step-num">2</div>
+          <div class="done-step-body">
+            <div class="done-step-title">E-mail the file to the researcher</div>
+            <div class="done-step-desc">Attach the downloaded file and send to:</div>
+            <a class="email-chip" href="mailto:ijse.dubbeldam@student.hu.nl?subject=Q-Sort Results – Circular Construction">ijse.dubbeldam@student.hu.nl</a>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn-download" style="background:var(--ink-2)" onclick="retrySubmit()">↺ Try sending again</button>
+      </div>
+      <details class="done-preview" style="margin-top:16px">
+        <summary>Preview your results</summary>
+        <div class="preview-csv" id="copyAreaError"></div>
+      </details>
+      <button class="btn-restart" onclick="resetSort()" style="margin-top:12px">← Start over</button>
+    </div>
+
   </div>
 </div>
 
@@ -1155,28 +1238,109 @@ function buildQuestionPreviews() {
 }
 
 function goToDone() {
-  const vals = ['answerHigh','answerLow','answerOther'].map(id => document.getElementById(id).value.trim());
-  const errs = ['errHigh','errLow','errOther'];
+  const company = document.getElementById('answerCompany').value.trim();
+  const vals    = ['answerHigh','answerLow','answerOther'].map(id => document.getElementById(id).value.trim());
   let ok = true;
-  vals.forEach((v,i) => {
-    const inp = document.getElementById(['answerHigh','answerLow','answerOther'][i]);
-    const err = document.getElementById(errs[i]);
-    if (!v) { inp.classList.add('invalid'); err.classList.add('visible'); ok=false; }
-    else    { inp.classList.remove('invalid'); err.classList.remove('visible'); }
+
+  // Validate company
+  const companyInp = document.getElementById('answerCompany');
+  const companyErr = document.getElementById('errCompany');
+  if (!company) {
+    companyInp.classList.add('invalid'); companyErr.classList.add('visible'); ok = false;
+  } else {
+    companyInp.classList.remove('invalid'); companyErr.classList.remove('visible');
+  }
+
+  // Validate the three open questions
+  ['answerHigh','answerLow','answerOther'].forEach((id,i) => {
+    const inp = document.getElementById(id);
+    const err = document.getElementById(['errHigh','errLow','errOther'][i]);
+    if (!vals[i]) { inp.classList.add('invalid'); err.classList.add('visible'); ok=false; }
+    else          { inp.classList.remove('invalid'); err.classList.remove('visible'); }
   });
-  if (!ok) { document.querySelector('.q-card textarea.invalid')?.scrollIntoView({behavior:'smooth',block:'center'}); return; }
+
+  if (!ok) {
+    // Scroll to first invalid field
+    document.querySelector('.q-card textarea.invalid, .q-text-input.invalid')
+      ?.scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+
   buildResults();
   showScreen('done');
+  showDoneState('sending');
+  submitToFormspree();
+}
+
+// ─── FORMSPREE SETUP ─────────────────────────────────────────────
+// Steps to activate:
+// 1. Go to https://formspree.io and sign up for free
+// 2. Click "New Form", name it "Q-Sort Results", set email to ijse.dubbeldam@student.hu.nl
+// 3. Copy the form endpoint — it looks like: https://formspree.io/f/abcdefgh
+// 4. Paste it below replacing YOUR_FORMSPREE_ID
+// ─────────────────────────────────────────────────────────────────
+const FORMSPREE_URL = 'https://formspree.io/f/mvznarpk;
+
+function showDoneState(state) {
+  ['doneSending','doneSuccess','doneError'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById('done'+state.charAt(0).toUpperCase()+state.slice(1)).style.display = 'block';
+}
+
+async function submitToFormspree() {
+  try {
+    const ts      = new Date().toISOString();
+    const company = document.getElementById('answerCompany').value.trim();
+    const rows    = STATEMENTS.map(s => {
+      const p = placements[s.id];
+      return `${s.id},${p?COLUMNS[p.ci].value:'?'},${s.cat}`;
+    }).join('\n');
+
+    const body = new FormData();
+    body.append('_subject', `Q-Sort Results – ${company} – ${ts.slice(0,10)}`);
+    body.append('timestamp',    ts);
+    body.append('company',      company);
+    body.append('scores',       rows);
+    body.append('q1_high_ranked',     document.getElementById('answerHigh').value.trim());
+    body.append('q2_low_ranked',      document.getElementById('answerLow').value.trim());
+    body.append('q3_other_barriers',  document.getElementById('answerOther').value.trim());
+    body.append('full_csv',     window._csvData || '');
+
+    const res = await fetch(FORMSPREE_URL, {
+      method:  'POST',
+      body,
+      headers: { 'Accept': 'application/json' }
+    });
+
+    if (res.ok) {
+      showDoneState('success');
+    } else {
+      console.error('Formspree error', res.status);
+      showDoneState('error');
+      document.getElementById('copyAreaError').textContent = window._csvData || '';
+    }
+  } catch(err) {
+    console.error('Submit failed', err);
+    showDoneState('error');
+    document.getElementById('copyAreaError').textContent = window._csvData || '';
+  }
+}
+
+function retrySubmit() {
+  showDoneState('sending');
+  submitToFormspree();
 }
 
 function buildResults() {
-  const ts = new Date().toISOString();
+  const ts      = new Date().toISOString();
+  const company = document.getElementById('answerCompany').value.trim();
   const [h,l,o] = ['answerHigh','answerLow','answerOther'].map(id => document.getElementById(id).value.trim());
   const rows = STATEMENTS.map(s => {
     const p = placements[s.id];
-    return {id:s.id,cat:s.cat,score:p?COLUMNS[p.ci].value:'?',text:s.text};
-  }).sort((a,b)=>b.score-a.score);
-  let csv = `Timestamp,${ts}\n\nID,Score,Category,Statement\n`;
+    return {id:s.id, cat:s.cat, score:p?COLUMNS[p.ci].value:'?', text:s.text};
+  }).sort((a,b) => b.score - a.score);
+  let csv = `Timestamp,${ts}\nCompany,${company}\n\nID,Score,Category,Statement\n`;
   rows.forEach(r => { csv += `${r.id},${r.score},${r.cat},"${r.text}"\n`; });
   csv += `\nQ1 – Why did you rank the high-ranked statements high?\n${h}\n`;
   csv += `\nQ2 – Why did you rank the low-ranked statements low?\n${l}\n`;
@@ -1196,12 +1360,13 @@ function downloadCSV() {
 function resetSort() {
   placements={}; pilePlacements={}; selectedId=null; pilesSelectedId=null;
   orderedStatements=shuffle(STATEMENTS);
-  ['answerHigh','answerLow','answerOther'].forEach(id => {
-    const el=document.getElementById(id); el.value=''; el.classList.remove('invalid');
+  ['answerCompany','answerHigh','answerLow','answerOther'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.value=''; el.classList.remove('invalid'); }
   });
-  ['errHigh','errLow','errOther'].forEach(id=>document.getElementById(id).classList.remove('visible'));
-  const ci=document.getElementById('participantCode');
-  if(ci){ci.value='';ci.classList.remove('invalid');}
+  ['errCompany','errHigh','errLow','errOther'].forEach(id => document.getElementById(id)?.classList.remove('visible'));
+  const ci = document.getElementById('participantCode');
+  if (ci) { ci.value=''; ci.classList.remove('invalid'); }
   document.getElementById('codeError').classList.remove('visible');
   showScreen('intro');
 }
