@@ -359,6 +359,50 @@ body{font-family:'Outfit',sans-serif;background:var(--stone);color:var(--ink);fo
 .done-error-box{background:var(--rust-2);border:1.5px solid var(--rust);border-radius:4px;padding:16px 20px;margin-bottom:4px}
 .done-error-title{font-size:13px;font-weight:600;color:var(--rust);margin-bottom:4px}
 .done-error-desc{font-size:13px;color:var(--ink-2);line-height:1.55}
+
+/* ════════════════════════════════
+   DEMOGRAPHICS SCREEN
+════════════════════════════════ */
+#demographics{min-height:100vh}
+#demographics.active{display:block!important}
+
+.demo-toolbar{position:sticky;top:0;z-index:200;background:var(--white);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow-s)}
+.demo-toolbar-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--forest)}
+.demo-toolbar-title span{font-weight:400;font-style:italic;color:var(--ink-3);font-size:13px;margin-left:8px}
+
+.demo-hero{background:var(--forest);padding:32px 28px 26px;color:#fff}
+.demo-hero .eyebrow{font-size:10px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:10px}
+.demo-hero h2{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;line-height:1.2;margin-bottom:8px}
+.demo-hero p{font-size:13.5px;color:rgba(255,255,255,.75);line-height:1.6;max-width:600px}
+
+.demo-body{padding:24px 20px 48px;max-width:680px;margin:0 auto}
+.demo-required-note{font-size:12px;color:var(--rust);margin-bottom:24px;font-weight:500}
+
+.demo-field{background:var(--white);border:1px solid var(--border);border-radius:4px;padding:22px 24px;margin-bottom:14px;box-shadow:var(--shadow-s)}
+.demo-field-label{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.demo-field-label .req{color:var(--rust);font-size:13px;line-height:1;font-weight:400}
+.demo-field-question{font-family:'Playfair Display',serif;font-size:15px;font-weight:400;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.demo-field-question .dutch-note{display:block;font-family:'Outfit',sans-serif;font-size:12px;font-weight:400;font-style:normal;color:var(--forest-2);margin-top:4px}
+
+/* Radio / option buttons */
+.demo-options{display:flex;flex-direction:column;gap:8px}
+.demo-option{display:flex;align-items:center;gap:12px;padding:10px 14px;border:1.5px solid var(--border);border-radius:3px;cursor:pointer;transition:border-color .15s,background .15s;font-size:13.5px;color:var(--ink);font-weight:400;background:var(--stone)}
+.demo-option:hover{border-color:var(--forest-2);background:var(--forest-3)}
+.demo-option input[type=radio]{accent-color:var(--forest);width:16px;height:16px;flex-shrink:0;cursor:pointer}
+.demo-option.selected{border-color:var(--forest);background:var(--forest-3);color:var(--forest);font-weight:500}
+
+/* Text input */
+.demo-text-input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:3px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:400;color:var(--ink);background:var(--stone);outline:none;transition:border-color .2s,background .2s}
+.demo-text-input:focus{border-color:var(--forest);background:var(--white)}
+.demo-text-input::placeholder{color:var(--ink-3)}
+.demo-text-input.invalid,.demo-option-group.invalid .demo-options{outline:2px solid var(--rust);outline-offset:2px;border-radius:4px}
+
+.demo-error{display:none;font-size:11.5px;color:var(--rust);margin-top:8px;font-weight:500}
+.demo-error.visible{display:block}
+
+.demo-footer{position:sticky;bottom:0;background:var(--white);border-top:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:flex-end;box-shadow:0 -4px 16px rgba(28,25,22,.07)}
+.btn-demo-continue{padding:13px 30px;background:var(--forest);color:#fff;border:none;border-radius:3px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;letter-spacing:.05em;cursor:pointer;transition:background .2s,box-shadow .2s;display:flex;align-items:center;gap:8px}
+.btn-demo-continue:hover{background:var(--forest-2);box-shadow:var(--shadow-m)}
 </style>
 </head>
 <body>
@@ -394,7 +438,7 @@ body{font-family:'Outfit',sans-serif;background:var(--stone);color:var(--ink);fo
         <div class="intro-steps">
           <div class="intro-step"><div class="intro-step-num">1</div><div class="intro-step-text">Sort all 35 statements into three rough piles: <strong>Disagree, Neutral, Agree</strong></div></div>
           <div class="intro-step"><div class="intro-step-num">2</div><div class="intro-step-text">Refine your sort by placing each card on the <strong>−4 to +4 grid</strong></div></div>
-          <div class="intro-step"><div class="intro-step-num">3</div><div class="intro-step-text">Answer <strong>3 short questions</strong>, then download and e-mail your results</div></div>
+          <div class="intro-step"><div class="intro-step-num">3</div><div class="intro-step-text">Answer <strong>4 short questions</strong>, then your results are sent automatically</div></div>
         </div>
       </div>
       <div class="intro-divider"></div>
@@ -408,10 +452,102 @@ body{font-family:'Outfit',sans-serif;background:var(--stone);color:var(--ink);fo
   </div>
 </div>
 
+<!-- ══════ DEMOGRAPHICS ══════ -->
+<div id="demographics" class="screen">
+  <div class="demo-toolbar">
+    <button class="btn-back" onclick="showScreen('intro')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button>
+    <div class="demo-toolbar-title">Q-Sort <span>Background information</span></div>
+    <div style="font-size:11px;color:var(--ink-3)">5 questions</div>
+  </div>
+
+  <div class="demo-hero">
+    <div class="eyebrow">Before you begin</div>
+    <h2>A few background questions</h2>
+    <p>Please answer all five questions below. Your responses are anonymous and will only be used for research purposes. / Uw antwoorden zijn anoniem en worden uitsluitend gebruikt voor onderzoeksdoeleinden.</p>
+  </div>
+
+  <div class="demo-body">
+    <div class="demo-required-note">* All questions are required / Alle vragen zijn verplicht</div>
+
+    <!-- Q1: Gender -->
+    <div class="demo-field">
+      <div class="demo-field-label">Question 1 of 5 <span class="req">*</span></div>
+      <div class="demo-field-question">What is your gender?
+        <span class="dutch-note">Wat is uw geslacht?</span>
+      </div>
+      <div class="demo-options demo-option-group" id="optGender">
+        <label class="demo-option"><input type="radio" name="gender" value="Male"> Male / Man</label>
+        <label class="demo-option"><input type="radio" name="gender" value="Female"> Female / Vrouw</label>
+        <label class="demo-option"><input type="radio" name="gender" value="Prefer not to disclose"> Prefer not to disclose / Zeg ik liever niet</label>
+      </div>
+      <div class="demo-error" id="errGender">Please select an option. / Selecteer een antwoord.</div>
+    </div>
+
+    <!-- Q2: Age -->
+    <div class="demo-field">
+      <div class="demo-field-label">Question 2 of 5 <span class="req">*</span></div>
+      <div class="demo-field-question">What is your age?
+        <span class="dutch-note">Wat is uw leeftijd?</span>
+      </div>
+      <div class="demo-options demo-option-group" id="optAge">
+        <label class="demo-option"><input type="radio" name="age" value="24 years or younger"> 24 years or younger / 24 jaar of jonger</label>
+        <label class="demo-option"><input type="radio" name="age" value="25–34"> 25–34</label>
+        <label class="demo-option"><input type="radio" name="age" value="35–44"> 35–44</label>
+        <label class="demo-option"><input type="radio" name="age" value="45–54"> 45–54</label>
+        <label class="demo-option"><input type="radio" name="age" value="55–64"> 55–64</label>
+        <label class="demo-option"><input type="radio" name="age" value="65 years or older"> 65 years or older / 65 jaar of ouder</label>
+      </div>
+      <div class="demo-error" id="errAge">Please select an option. / Selecteer een antwoord.</div>
+    </div>
+
+    <!-- Q3: Company -->
+    <div class="demo-field">
+      <div class="demo-field-label">Question 3 of 5 <span class="req">*</span></div>
+      <div class="demo-field-question">Which company do you work for?
+        <span class="dutch-note">Bij welk bedrijf bent u werkzaam?</span>
+      </div>
+      <input type="text" id="demoCompany" class="demo-text-input" placeholder="Company name / Bedrijfsnaam">
+      <div class="demo-error" id="errDemoCompany">Please fill in your company name. / Vul uw bedrijfsnaam in.</div>
+    </div>
+
+    <!-- Q4: Position -->
+    <div class="demo-field">
+      <div class="demo-field-label">Question 4 of 5 <span class="req">*</span></div>
+      <div class="demo-field-question">What is your position?
+        <span class="dutch-note">Wat is uw functie?</span>
+      </div>
+      <input type="text" id="demoPosition" class="demo-text-input" placeholder="e.g. Project Developer / Projectontwikkelaar">
+      <div class="demo-error" id="errDemoPosition">Please fill in your position. / Vul uw functie in.</div>
+    </div>
+
+    <!-- Q5: Experience -->
+    <div class="demo-field">
+      <div class="demo-field-label">Question 5 of 5 <span class="req">*</span></div>
+      <div class="demo-field-question">How many years of experience do you have as a project developer?
+        <span class="dutch-note">Hoeveel jaar werkervaring heeft u als projectontwikkelaar?</span>
+      </div>
+      <div class="demo-options demo-option-group" id="optExperience">
+        <label class="demo-option"><input type="radio" name="experience" value="0–1 years"> 0–1 years / jaar</label>
+        <label class="demo-option"><input type="radio" name="experience" value="1–3 years"> 1–3 years / jaar</label>
+        <label class="demo-option"><input type="radio" name="experience" value="3–5 years"> 3–5 years / jaar</label>
+        <label class="demo-option"><input type="radio" name="experience" value="5–10 years"> 5–10 years / jaar</label>
+        <label class="demo-option"><input type="radio" name="experience" value="10–15 years"> 10–15 years / jaar</label>
+        <label class="demo-option"><input type="radio" name="experience" value="15–25 years"> 15–25 years / jaar</label>
+        <label class="demo-option"><input type="radio" name="experience" value="More than 25 years"> More than 25 years / Meer dan 25 jaar</label>
+      </div>
+      <div class="demo-error" id="errExperience">Please select an option. / Selecteer een antwoord.</div>
+    </div>
+  </div>
+
+  <div class="demo-footer">
+    <button class="btn-demo-continue" onclick="submitDemographics()">Continue → / Verder →</button>
+  </div>
+</div>
+
 <!-- ══════ OVERVIEW ══════ -->
 <div id="overview" class="screen">
   <div class="overview-toolbar">
-    <button class="btn-back" onclick="showScreen('intro')">
+    <button class="btn-back" onclick="showScreen('demographics')">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Back
     </button>
     <div class="overview-title">Q-Sort <span>Read all statements</span></div>
@@ -525,24 +661,16 @@ body{font-family:'Outfit',sans-serif;background:var(--stone);color:var(--ink);fo
       <button class="btn-back" onclick="showScreen('sort')" style="margin-bottom:16px"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Back to grid</button>
       <div class="eyebrow">Step 3 of 3 — Follow-up questions</div>
       <h2>Almost <em>done.</em></h2>
-      <p>Please answer all four questions — they help interpret your sort. Your answers will be included in the submitted results.</p>
-      <p class="required-note">All four questions are required.</p>
+      <p>Please answer all three questions — they help interpret your sort. Your answers will be included in the submitted results.</p>
+      <p class="required-note">All three questions are required.</p>
     </div>
 
-    <!-- Company question -->
-    <div class="q-card">
-      <div class="q-num">Question 1 of 4 <span class="req">*</span></div>
-      <div class="q-question-text">Which company do you work for? <span class="dutch-note">Bij welk bedrijf bent u werkzaam?</span></div>
-      <input type="text" id="answerCompany" class="q-text-input" placeholder="Company name / Bedrijfsnaam">
-      <div class="q-error" id="errCompany">Please fill in your company name before continuing.</div>
-    </div>
-
-    <div class="preview-band" style="margin-top:20px">
+    <div class="preview-band">
       <div class="preview-band-title">Your highest-ranked statements (+3 and +4)</div>
       <ul class="preview-list" id="highList"></ul>
     </div>
     <div class="q-card">
-      <div class="q-num">Question 2 of 4 <span class="req">*</span></div>
+      <div class="q-num">Question 1 of 3 <span class="req">*</span></div>
       <div class="q-question-text">Why did you rank these statements high? <span class="dutch-note">Je mag ook in het Nederlands antwoorden.</span></div>
       <textarea id="answerHigh" placeholder="Describe your reasoning… / Beschrijf je redenering…"></textarea>
       <div class="q-error" id="errHigh">Please answer this question before continuing.</div>
@@ -552,13 +680,13 @@ body{font-family:'Outfit',sans-serif;background:var(--stone);color:var(--ink);fo
       <ul class="preview-list" id="lowList"></ul>
     </div>
     <div class="q-card">
-      <div class="q-num">Question 3 of 4 <span class="req">*</span></div>
+      <div class="q-num">Question 2 of 3 <span class="req">*</span></div>
       <div class="q-question-text">Why did you rank these statements low? <span class="dutch-note">Je mag ook in het Nederlands antwoorden.</span></div>
       <textarea id="answerLow" placeholder="Describe your reasoning… / Beschrijf je redenering…"></textarea>
       <div class="q-error" id="errLow">Please answer this question before continuing.</div>
     </div>
     <div class="q-card" style="margin-top:20px">
-      <div class="q-num">Question 4 of 4 <span class="req">*</span></div>
+      <div class="q-num">Question 3 of 3 <span class="req">*</span></div>
       <div class="q-question-text">Do you experience other barriers to circularity that were not mentioned in the statements? <span class="dutch-note">Je mag ook in het Nederlands antwoorden.</span></div>
       <textarea id="answerOther" placeholder="Any additional barriers… / Eventuele andere barrières…" style="min-height:120px"></textarea>
       <div class="q-error" id="errOther">Please answer this question before continuing.</div>
@@ -755,6 +883,61 @@ function beginWithCode() {
   }
   input.classList.remove('invalid');
   error.classList.remove('visible');
+  setupDemoRadioHighlights();
+  showScreen('demographics');
+}
+
+// Highlight selected radio options visually
+function setupDemoRadioHighlights() {
+  document.querySelectorAll('.demo-option input[type=radio]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const group = radio.closest('.demo-options');
+      group.querySelectorAll('.demo-option').forEach(opt => opt.classList.remove('selected'));
+      radio.closest('.demo-option').classList.add('selected');
+      // Clear error on selection
+      const errId = 'err' + group.id.replace('opt','');
+      document.getElementById(errId)?.classList.remove('visible');
+      group.style.outline = '';
+    });
+  });
+}
+
+function submitDemographics() {
+  let ok = true;
+
+  // Validate radio groups
+  [['gender','errGender'],['age','errAge'],['experience','errExperience']].forEach(([name, errId]) => {
+    const selected = document.querySelector(`input[name="${name}"]:checked`);
+    const err      = document.getElementById(errId);
+    const group    = document.getElementById('opt'+name.charAt(0).toUpperCase()+name.slice(1));
+    if (!selected) {
+      err.classList.add('visible');
+      if (group) group.style.outline = '2px solid var(--rust)';
+      ok = false;
+    } else {
+      err.classList.remove('visible');
+      if (group) group.style.outline = '';
+    }
+  });
+
+  // Validate text fields
+  [['demoCompany','errDemoCompany'],['demoPosition','errDemoPosition']].forEach(([inputId, errId]) => {
+    const inp = document.getElementById(inputId);
+    const err = document.getElementById(errId);
+    if (!inp.value.trim()) {
+      inp.classList.add('invalid'); err.classList.add('visible'); ok = false;
+    } else {
+      inp.classList.remove('invalid'); err.classList.remove('visible');
+    }
+  });
+
+  if (!ok) {
+    // Scroll to first error
+    document.querySelector('.demo-error.visible')?.closest('.demo-field')
+      ?.scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+
   buildOverview();
   showScreen('overview');
 }
@@ -1238,48 +1421,37 @@ function buildQuestionPreviews() {
 }
 
 function goToDone() {
-  const company = document.getElementById('answerCompany').value.trim();
-  const vals    = ['answerHigh','answerLow','answerOther'].map(id => document.getElementById(id).value.trim());
+  const vals = ['answerHigh','answerLow','answerOther'].map(id => document.getElementById(id).value.trim());
   let ok = true;
-
-  // Validate company
-  const companyInp = document.getElementById('answerCompany');
-  const companyErr = document.getElementById('errCompany');
-  if (!company) {
-    companyInp.classList.add('invalid'); companyErr.classList.add('visible'); ok = false;
-  } else {
-    companyInp.classList.remove('invalid'); companyErr.classList.remove('visible');
-  }
-
-  // Validate the three open questions
   ['answerHigh','answerLow','answerOther'].forEach((id,i) => {
     const inp = document.getElementById(id);
     const err = document.getElementById(['errHigh','errLow','errOther'][i]);
     if (!vals[i]) { inp.classList.add('invalid'); err.classList.add('visible'); ok=false; }
     else          { inp.classList.remove('invalid'); err.classList.remove('visible'); }
   });
-
   if (!ok) {
-    // Scroll to first invalid field
-    document.querySelector('.q-card textarea.invalid, .q-text-input.invalid')
-      ?.scrollIntoView({behavior:'smooth', block:'center'});
+    document.querySelector('.q-card textarea.invalid')?.scrollIntoView({behavior:'smooth', block:'center'});
     return;
   }
-
   buildResults();
   showScreen('done');
   showDoneState('sending');
   submitToFormspree();
 }
 
-// ─── FORMSPREE SETUP ─────────────────────────────────────────────
-// Steps to activate:
-// 1. Go to https://formspree.io and sign up for free
-// 2. Click "New Form", name it "Q-Sort Results", set email to ijse.dubbeldam@student.hu.nl
-// 3. Copy the form endpoint — it looks like: https://formspree.io/f/abcdefgh
-// 4. Paste it below replacing YOUR_FORMSPREE_ID
-// ─────────────────────────────────────────────────────────────────
-const FORMSPREE_URL = 'https://formspree.io/f/mvznarpk;
+// Helper: read all demographics from DOM
+function getDemographics() {
+  return {
+    gender:     document.querySelector('input[name="gender"]:checked')?.value     || '',
+    age:        document.querySelector('input[name="age"]:checked')?.value        || '',
+    company:    document.getElementById('demoCompany')?.value.trim()              || '',
+    position:   document.getElementById('demoPosition')?.value.trim()            || '',
+    experience: document.querySelector('input[name="experience"]:checked')?.value || '',
+  };
+}
+
+// ─── FORMSPREE ───────────────────────────────────────────────────
+const FORMSPREE_URL = 'https://formspree.io/f/YOUR_FORMSPREE_ID';
 
 function showDoneState(state) {
   ['doneSending','doneSuccess','doneError'].forEach(id => {
@@ -1290,22 +1462,26 @@ function showDoneState(state) {
 
 async function submitToFormspree() {
   try {
-    const ts      = new Date().toISOString();
-    const company = document.getElementById('answerCompany').value.trim();
-    const rows    = STATEMENTS.map(s => {
+    const ts   = new Date().toISOString();
+    const demo = getDemographics();
+    const rows = STATEMENTS.map(s => {
       const p = placements[s.id];
       return `${s.id},${p?COLUMNS[p.ci].value:'?'},${s.cat}`;
     }).join('\n');
 
     const body = new FormData();
-    body.append('_subject', `Q-Sort Results – ${company} – ${ts.slice(0,10)}`);
-    body.append('timestamp',    ts);
-    body.append('company',      company);
-    body.append('scores',       rows);
-    body.append('q1_high_ranked',     document.getElementById('answerHigh').value.trim());
-    body.append('q2_low_ranked',      document.getElementById('answerLow').value.trim());
-    body.append('q3_other_barriers',  document.getElementById('answerOther').value.trim());
-    body.append('full_csv',     window._csvData || '');
+    body.append('_subject',       `Q-Sort Results – ${demo.company} – ${ts.slice(0,10)}`);
+    body.append('timestamp',      ts);
+    body.append('gender',         demo.gender);
+    body.append('age',            demo.age);
+    body.append('company',        demo.company);
+    body.append('position',       demo.position);
+    body.append('experience',     demo.experience);
+    body.append('scores',         rows);
+    body.append('q1_high_ranked',    document.getElementById('answerHigh').value.trim());
+    body.append('q2_low_ranked',     document.getElementById('answerLow').value.trim());
+    body.append('q3_other_barriers', document.getElementById('answerOther').value.trim());
+    body.append('full_csv',       window._csvData || '');
 
     const res = await fetch(FORMSPREE_URL, {
       method:  'POST',
@@ -1333,41 +1509,66 @@ function retrySubmit() {
 }
 
 function buildResults() {
-  const ts      = new Date().toISOString();
-  const company = document.getElementById('answerCompany').value.trim();
+  const ts   = new Date().toISOString();
+  const demo = getDemographics();
   const [h,l,o] = ['answerHigh','answerLow','answerOther'].map(id => document.getElementById(id).value.trim());
   const rows = STATEMENTS.map(s => {
     const p = placements[s.id];
     return {id:s.id, cat:s.cat, score:p?COLUMNS[p.ci].value:'?', text:s.text};
   }).sort((a,b) => b.score - a.score);
-  let csv = `Timestamp,${ts}\nCompany,${company}\n\nID,Score,Category,Statement\n`;
+
+  let csv = `Timestamp,${ts}\n`;
+  csv += `Gender,${demo.gender}\n`;
+  csv += `Age,${demo.age}\n`;
+  csv += `Company,${demo.company}\n`;
+  csv += `Position,${demo.position}\n`;
+  csv += `Experience,${demo.experience}\n`;
+  csv += `\nID,Score,Category,Statement\n`;
   rows.forEach(r => { csv += `${r.id},${r.score},${r.cat},"${r.text}"\n`; });
   csv += `\nQ1 – Why did you rank the high-ranked statements high?\n${h}\n`;
   csv += `\nQ2 – Why did you rank the low-ranked statements low?\n${l}\n`;
   csv += `\nQ3 – Other barriers not mentioned in the statements:\n${o}\n`;
+
   document.getElementById('copyArea').textContent = csv;
   window._csvData = csv;
 }
 
 function downloadCSV() {
   const blob = new Blob([window._csvData||''],{type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
   a.href=url; a.download=`qsort_results_${Date.now()}.csv`; a.click();
   URL.revokeObjectURL(url);
 }
 
 function resetSort() {
   placements={}; pilePlacements={}; selectedId=null; pilesSelectedId=null;
-  orderedStatements=shuffle(STATEMENTS);
-  ['answerCompany','answerHigh','answerLow','answerOther'].forEach(id => {
+  orderedStatements = shuffle(STATEMENTS);
+
+  // Clear demographics
+  document.querySelectorAll('input[type=radio]').forEach(r => r.checked = false);
+  document.querySelectorAll('.demo-option').forEach(o => o.classList.remove('selected'));
+  document.querySelectorAll('.demo-options').forEach(g => g.style.outline = '');
+  ['demoCompany','demoPosition'].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.value=''; el.classList.remove('invalid'); }
   });
-  ['errCompany','errHigh','errLow','errOther'].forEach(id => document.getElementById(id)?.classList.remove('visible'));
+  ['errGender','errAge','errDemoCompany','errDemoPosition','errExperience'].forEach(id =>
+    document.getElementById(id)?.classList.remove('visible'));
+
+  // Clear follow-up answers
+  ['answerHigh','answerLow','answerOther'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.value=''; el.classList.remove('invalid'); }
+  });
+  ['errHigh','errLow','errOther'].forEach(id =>
+    document.getElementById(id)?.classList.remove('visible'));
+
+  // Clear participant code
   const ci = document.getElementById('participantCode');
   if (ci) { ci.value=''; ci.classList.remove('invalid'); }
   document.getElementById('codeError').classList.remove('visible');
+
   showScreen('intro');
 }
 </script>
