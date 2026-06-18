@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Q-Sort — Barriers to Circular Construction</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --stone:    #f7f4ee;
+  --stone-2:  #ede9e0;
+  --stone-3:  #d9d3c5;
+  --white:    #ffffff;
+  --ink:      #1c1916;
+  --ink-2:    #5a5550;
+  --ink-3:    #9e9892;
+  --forest:   #1e4a30;
+  --forest-2: #2f6644;
+  --forest-3: #d4e8db;
+  --rust:     #b84c2b;
+  --rust-2:   #fdf0eb;
+  --border:   #ddd8cc;
+  --shadow-s: 0 1px 4px rgba(28,25,22,.07);
+  --shadow-m: 0 4px 16px rgba(28,25,22,.10);
+  --shadow-l: 0 12px 40px rgba(28,25,22,.13);
+  --col-n4: #b84c2b; --col-n3: #cc6a48; --col-n2: #de9070; --col-n1: #ebb99a;
+  --col-0:  #a0b5ac;
+  --col-p1: #8ec4a8; --col-p2: #5aac84; --col-p3: #338a5e; --col-p4: #1e4a30;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Outfit',sans-serif;background:var(--stone);color:var(--ink);font-size:14px;line-height:1.5;min-height:100vh}
+
+/* ── SCREENS ── */
+.screen{display:none!important}
+.screen.active{display:block!important}
+#intro.active,#questions.active,#done.active{display:flex!important}
+/* sort screen uses a special flex layout */
+#sort.active{display:flex!important}
+
+/* ── SHARED TOOLBAR ── */
+.toolbar{position:sticky;top:0;z-index:200;background:var(--white);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow-s);flex-shrink:0}
+.toolbar-brand{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--forest)}
+.toolbar-brand span{font-weight:400;font-style:italic;color:var(--ink-3);font-size:13px;margin-left:8px}
+.toolbar-right{display:flex;align-items:center;gap:16px}
+.step-pills{display:flex;gap:5px;align-items:center}
+.step-pill{height:6px;border-radius:3px;background:var(--stone-3);transition:all .3s}
+.step-pill.w-active{background:var(--forest);width:28px}
+.step-pill.w-done{background:var(--forest-3);width:14px}
+.step-pill.w-idle{width:14px}
+.toolbar-count{font-size:12px;color:var(--ink-3)}
+.toolbar-count strong{color:var(--forest);font-weight:600}
+.btn-back{display:inline-flex;align-items:center;gap:5px;padding:0;background:none;border:none;font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;color:var(--ink-3);cursor:pointer;transition:color .2s}
+.btn-back:hover{color:var(--forest)}
+
+/* ── Q BAR ── */
+.q-bar{background:var(--forest);padding:9px 20px;font-family:'Playfair Display',serif;font-style:italic;font-size:13px;color:rgba(255,255,255,.85);line-height:1.5;text-align:center;flex-shrink:0}
+
+/* ── HINT BAR ── */
+.hint-bar{display:flex;align-items:center;gap:14px;padding:14px 20px;background:var(--forest-3);border-bottom:2px solid #b0d4be;flex-shrink:0}
+.hint-bar-icon{width:34px;height:34px;border-radius:50%;background:var(--forest);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;font-weight:700;font-family:'Playfair Display',serif;font-style:italic}
+.hint-bar-body{flex:1}
+.hint-bar-step{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--forest-2);margin-bottom:2px}
+.hint-bar-text{font-size:14px;font-weight:500;color:var(--forest);line-height:1.4}
+
+/* ── STATEMENT CARDS ── */
+.stmt-card{background:var(--white);border:1px solid var(--border);border-radius:3px;padding:10px 10px 9px;cursor:grab;transition:border-color .15s,box-shadow .15s,transform .1s;user-select:none;position:relative}
+.stmt-card:hover{border-color:var(--forest-2);box-shadow:var(--shadow-m);transform:translateY(-1px)}
+.stmt-card.selected{border-color:var(--forest);box-shadow:0 0 0 2.5px var(--forest);background:var(--forest-3)}
+.stmt-card.placed{cursor:grab}
+.stmt-card.placed:hover{border-color:var(--forest-2);box-shadow:var(--shadow-s);transform:none}
+.stmt-card.dragging{opacity:.3;transform:none;box-shadow:none}
+.stmt-card.drag-over-card{border-color:var(--forest);box-shadow:0 0 0 2.5px var(--forest);background:var(--forest-3)}
+.stmt-id{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;letter-spacing:.05em;color:var(--forest-2);margin-bottom:5px}
+.cat-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.stmt-text{font-family:'Playfair Display',serif;font-size:11px;font-weight:400;line-height:1.55;color:var(--ink)}
+.stmt-card.selected .stmt-text{color:var(--forest)}
+
+/* ── PROGRESS FOOTER ── */
+.progress-footer{background:var(--white);border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.progress-track{flex:1;height:5px;background:var(--stone-2);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:var(--forest);border-radius:3px;transition:width .4s cubic-bezier(.4,0,.2,1)}
+.progress-label{font-size:12px;color:var(--ink-3);white-space:nowrap}
+.progress-label strong{color:var(--forest)}
+.btn-continue{padding:10px 22px;background:var(--ink);color:#fff;border:none;border-radius:2px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;letter-spacing:.06em;cursor:pointer;transition:background .2s;opacity:.35;pointer-events:none;white-space:nowrap}
+.btn-continue.ready{background:var(--forest);opacity:1;pointer-events:auto}
+.btn-continue.ready:hover{background:var(--forest-2)}
+
+/* ── UNSORTED SECTION ── */
+.unsorted-section{padding:12px 20px 24px;background:var(--stone);border-top:1px solid var(--border)}
+.unsorted-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.unsorted-head h3{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.unsorted-head .remaining{font-size:12px;color:var(--forest-2);font-weight:500}
+.unsorted-pile{display:flex;flex-wrap:wrap;gap:7px}
+.unsorted-pile .stmt-card{width:190px}
+
+/* ════════════════════════════════
+   INTRO SCREEN
+════════════════════════════════ */
+#intro{min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px 60px;background:radial-gradient(ellipse 70% 50% at 80% 20%,rgba(30,74,48,.07) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 10% 80%,rgba(184,76,43,.06) 0%,transparent 55%),var(--stone)}
+.intro-wrap{width:100%;max-width:760px;display:grid;grid-template-columns:1fr 1fr;background:var(--white);border-radius:2px;box-shadow:var(--shadow-l);overflow:hidden}
+.intro-left{background:var(--forest);padding:52px 44px;display:flex;flex-direction:column;justify-content:space-between;color:#fff;position:relative;overflow:hidden}
+.intro-left::before{content:'';position:absolute;bottom:-60px;right:-60px;width:240px;height:240px;border-radius:50%;border:1.5px solid rgba(255,255,255,.10)}
+.intro-left::after{content:'';position:absolute;bottom:-20px;right:-20px;width:140px;height:140px;border-radius:50%;border:1.5px solid rgba(255,255,255,.08)}
+.intro-eyebrow{font-size:10px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:28px}
+.intro-left h1{font-family:'Playfair Display',serif;font-size:36px;font-weight:700;line-height:1.15;color:#fff;margin-bottom:20px}
+.intro-left h1 em{font-style:italic;color:rgba(255,255,255,.75)}
+.intro-left .researcher{font-size:12px;color:rgba(255,255,255,.5);line-height:1.6;margin-top:auto;padding-top:36px;border-top:1px solid rgba(255,255,255,.12)}
+.intro-left .researcher strong{color:rgba(255,255,255,.8);font-weight:500}
+.intro-right{padding:52px 44px;display:flex;flex-direction:column;gap:22px}
+.intro-section-label{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--forest-2);margin-bottom:5px}
+.intro-body-text{font-family:'Playfair Display',serif;font-size:13.5px;font-weight:400;line-height:1.75;color:var(--ink-2)}
+.research-q{border-left:3px solid var(--forest);padding:12px 16px;background:var(--forest-3);border-radius:0 3px 3px 0}
+.research-q p{font-family:'Playfair Display',serif;font-style:italic;font-size:13px;line-height:1.65;color:var(--forest)}
+.intro-steps{display:flex;flex-direction:column;gap:10px}
+.intro-step{display:flex;gap:12px;align-items:flex-start}
+.intro-step-num{width:22px;height:22px;border-radius:50%;background:var(--stone-2);color:var(--forest);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.intro-step-text{font-size:13px;color:var(--ink-2);line-height:1.5;padding-top:2px}
+.intro-divider{height:1px;background:var(--border)}
+.code-field{display:flex;flex-direction:column;gap:6px}
+.code-label{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--forest-2)}
+.code-input{padding:11px 14px;border:1.5px solid var(--border);border-radius:3px;background:var(--stone);color:var(--ink);font-family:'Outfit',sans-serif;font-size:14px;outline:none;transition:border-color .2s,background .2s}
+.code-input::placeholder{color:var(--ink-3)}
+.code-input:focus{border-color:var(--forest);background:var(--white)}
+.code-input.invalid{border-color:var(--rust);background:var(--rust-2)}
+.code-error{display:none;font-size:12px;color:var(--rust);font-weight:500}
+.code-error.visible{display:block}
+.btn-begin{width:100%;padding:15px 24px;background:var(--forest);color:#fff;border:none;border-radius:2px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;letter-spacing:.06em;cursor:pointer;transition:background .2s,box-shadow .2s;display:flex;align-items:center;justify-content:space-between}
+.btn-begin:hover{background:var(--forest-2);box-shadow:var(--shadow-m)}
+.btn-begin span{opacity:.6;font-size:18px;line-height:1}
+
+/* ════════════════════════════════
+   OVERVIEW SCREEN
+════════════════════════════════ */
+#overview{min-height:100vh}
+#overview.active{display:block!important}
+.overview-toolbar{position:sticky;top:0;z-index:200;background:var(--white);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow-s)}
+.overview-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--forest)}
+.overview-title span{font-weight:400;font-style:italic;color:var(--ink-3);font-size:13px;margin-left:8px}
+.overview-hero{background:var(--forest);padding:32px 28px 24px;color:#fff}
+.overview-hero .eyebrow{font-size:10px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:10px}
+.overview-hero h2{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;line-height:1.2;margin-bottom:8px}
+.overview-hero p{font-size:13.5px;color:rgba(255,255,255,.75);line-height:1.65;max-width:680px}
+.overview-body{padding:20px 20px 28px}
+.overview-cat-group{margin-bottom:24px}
+.overview-cat-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:7px;border-bottom:2px solid var(--border)}
+.overview-cat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.overview-cat-name{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.overview-cat-count{font-size:11px;color:var(--ink-3);margin-left:auto}
+.overview-stmts{display:flex;flex-direction:column;gap:5px}
+.overview-stmt{display:flex;gap:14px;align-items:flex-start;background:var(--white);border:1px solid var(--border);border-radius:3px;padding:10px 14px;box-shadow:var(--shadow-s)}
+.overview-stmt-id{font-size:11px;font-weight:600;color:var(--forest-2);white-space:nowrap;min-width:36px;padding-top:1px}
+.overview-stmt-text{font-family:'Playfair Display',serif;font-size:13.5px;font-weight:400;color:var(--ink);line-height:1.55}
+.overview-footer{position:sticky;bottom:0;background:var(--white);border-top:1px solid var(--border);padding:13px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 -4px 16px rgba(28,25,22,.07)}
+.overview-footer p{font-size:13px;color:var(--ink-3)}
+.overview-footer p strong{color:var(--ink-2)}
+.btn-start-sort{padding:12px 28px;background:var(--forest);color:#fff;border:none;border-radius:3px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;letter-spacing:.05em;cursor:pointer;transition:background .2s,box-shadow .2s;display:flex;align-items:center;gap:8px}
+.btn-start-sort:hover{background:var(--forest-2);box-shadow:var(--shadow-m)}
+
+/* ════════════════════════════════
+   PILES SCREEN
+════════════════════════════════ */
+#piles{min-height:100vh}
+#piles.active{display:block!important}
+.piles-zones{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:14px 16px 8px}
+.pile-zone{background:var(--white);border:2px dashed var(--border);border-radius:4px;min-height:180px;overflow:hidden;cursor:pointer;transition:border-color .2s,background .2s,box-shadow .2s}
+.pile-zone.pile-disagree{border-color:#ddb9a8}
+.pile-zone.pile-neutral{border-color:#b8c9c2}
+.pile-zone.pile-agree{border-color:#a2c9b3}
+.pile-zone.drop-active{border-style:solid;box-shadow:var(--shadow-m)}
+.pile-zone.pile-disagree.drop-active{border-color:var(--col-n3);background:#fdf5f2}
+.pile-zone.pile-neutral.drop-active{border-color:var(--col-0);background:#f4f7f6}
+.pile-zone.pile-agree.drop-active{border-color:var(--col-p3);background:var(--forest-3)}
+.pile-header{padding:10px 12px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.pile-name{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.pile-zone.pile-disagree .pile-name{color:var(--col-n3)}
+.pile-zone.pile-neutral .pile-name{color:var(--col-0)}
+.pile-zone.pile-agree .pile-name{color:var(--col-p3)}
+.pile-count-badge{font-size:11px;font-weight:600;color:var(--ink-3);background:var(--stone-2);padding:1px 7px;border-radius:10px}
+.pile-cards{padding:8px;display:flex;flex-direction:column;gap:5px}
+.pile-zone .stmt-card{width:100%}
+
+/* ════════════════════════════════
+   SORT / GRID SCREEN  ← key layout
+   Sticky toolbar + q-bar + hint at top
+   Below: LEFT = scrollable grid, RIGHT = scrollable pile
+   This avoids the scroll problem entirely
+════════════════════════════════ */
+#sort{
+  height:100vh;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+/* Everything below the sticky header that fills remaining height */
+.sort-body{
+  flex:1 1 0;
+  display:flex;
+  flex-direction:row;
+  overflow:hidden;
+  min-height:0;
+}
+
+/* LEFT PANEL: grid, scrollable */
+.sort-grid-panel{
+  flex:1 1 0;
+  overflow:auto;
+  padding:10px 14px 20px;
+  background:var(--stone);
+  border-right:2px solid var(--border);
+  min-width:0;
+}
+
+.scale-labels{
+  display:flex;
+  justify-content:space-between;
+  padding:2px 4px 6px;
+  font-size:10px;
+  font-weight:500;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--ink-3);
+}
+
+.grid-scale{
+  display:flex;
+  gap:6px;
+  min-width:fit-content;
+}
+
+.grid-col{display:flex;flex-direction:column;align-items:center;gap:5px}
+.col-head{text-align:center;padding-bottom:2px;flex-shrink:0}
+.col-val{font-size:13px;font-weight:600;display:block;line-height:1}
+.col-n{font-size:9px;color:var(--ink-3);display:block;margin-top:2px}
+.col-lbl{font-size:8px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);display:block;max-width:52px;text-align:center;line-height:1.3;margin-top:1px}
+
+.grid-slot{
+  width:100px;
+  min-height:110px;
+  border:1.5px dashed var(--border);
+  border-radius:3px;
+  cursor:pointer;
+  transition:border-color .12s,background .12s;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--white);
+  flex-shrink:0;
+}
+.grid-slot:empty::after{content:'+';color:var(--stone-3);font-size:20px;font-weight:300}
+.grid-slot.drop-target{border-style:solid;border-color:var(--forest);background:var(--forest-3)}
+.grid-slot.drop-target:empty::after{color:var(--forest-2)}
+
+/* RIGHT PANEL: statement pile, scrollable */
+.sort-pile-panel{
+  width:230px;
+  flex-shrink:0;
+  overflow-y:auto;
+  background:var(--stone);
+  padding:12px 12px 24px;
+}
+.pile-panel-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.pile-panel-head h3{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.pile-panel-head .remaining{font-size:11px;color:var(--forest-2);font-weight:500}
+.pile-panel-cards{display:flex;flex-direction:column;gap:6px}
+.pile-panel-cards .stmt-card{width:100%}
+.pile-panel-sep{font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:8px 0 2px;flex-basis:100%}
+
+/* Drop zone highlight on pile panel */
+.sort-pile-panel.drop-over{outline:2px dashed var(--forest);outline-offset:-4px;border-radius:4px}
+
+/* Progress bar between body panels - shown as a thin strip at bottom of top area */
+.sort-progress{
+  flex-shrink:0;
+  background:var(--white);
+  border-top:1px solid var(--border);
+  padding:8px 20px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+/* ════════════════════════════════
+   QUESTIONS SCREEN
+════════════════════════════════ */
+#questions{min-height:100vh;flex-direction:column;align-items:center;justify-content:flex-start;padding:48px 20px 72px;background:var(--stone)}
+.questions-wrap{width:100%;max-width:700px}
+.questions-header{margin-bottom:32px}
+.questions-header .eyebrow{font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--forest-2);margin-bottom:10px}
+.questions-header h2{font-family:'Playfair Display',serif;font-size:34px;font-weight:700;color:var(--ink);line-height:1.15;margin-bottom:10px}
+.questions-header h2 em{font-style:italic;color:var(--forest)}
+.questions-header p{font-size:14px;color:var(--ink-2);line-height:1.65}
+.required-note{font-size:11px;color:var(--rust);margin-top:6px}
+.preview-band{background:var(--white);border:1px solid var(--border);border-radius:4px;padding:14px 18px;margin-bottom:14px;box-shadow:var(--shadow-s)}
+.preview-band-title{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
+.preview-list{list-style:none;display:flex;flex-direction:column;gap:7px}
+.preview-list li{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--ink);line-height:1.55}
+.preview-list .pid{font-size:10px;font-weight:600;color:var(--forest-2);white-space:nowrap;padding-top:2px;min-width:52px}
+.q-card{background:var(--white);border:1px solid var(--border);border-radius:4px;padding:22px 24px;margin-bottom:14px;box-shadow:var(--shadow-s)}
+.q-num{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.q-num .req{color:var(--rust);font-size:13px;line-height:1}
+.q-question-text{font-family:'Playfair Display',serif;font-size:15px;font-weight:400;color:var(--ink);line-height:1.5;margin-bottom:12px}
+.dutch-note{display:block;font-family:'Outfit',sans-serif;font-size:12px;font-weight:400;font-style:normal;color:var(--forest-2);margin-top:5px;letter-spacing:0}
+.q-card textarea{width:100%;min-height:90px;padding:11px 14px;border:1.5px solid var(--border);border-radius:3px;font-family:'Outfit',sans-serif;font-size:13.5px;font-weight:300;color:var(--ink);background:var(--stone);outline:none;resize:vertical;transition:border-color .2s,background .2s;line-height:1.65}
+.q-text-input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:3px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:400;color:var(--ink);background:var(--stone);outline:none;transition:border-color .2s,background .2s}
+.q-text-input:focus{border-color:var(--forest);background:var(--white)}
+.q-text-input::placeholder{color:var(--ink-3)}
+.q-text-input.invalid{border-color:var(--rust);background:var(--rust-2)}
+.q-card textarea:focus{border-color:var(--forest);background:var(--white)}
+.q-card textarea::placeholder{color:var(--ink-3)}
+.q-card textarea.invalid{border-color:var(--rust);background:var(--rust-2)}
+.q-error{display:none;font-size:11.5px;color:var(--rust);margin-top:7px;font-weight:500}
+.q-error.visible{display:block}
+.btn-to-done{width:100%;padding:15px 24px;background:var(--forest);color:#fff;border:none;border-radius:3px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;letter-spacing:.06em;cursor:pointer;transition:background .2s,box-shadow .2s;display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+.btn-to-done:hover{background:var(--forest-2);box-shadow:var(--shadow-m)}
+.btn-to-done span{opacity:.6;font-size:18px}
+
+/* ════════════════════════════════
+   DONE SCREEN
+════════════════════════════════ */
+#done{min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px 72px;background:radial-gradient(ellipse 60% 50% at 20% 80%,rgba(30,74,48,.07) 0%,transparent 60%),var(--stone)}
+.done-wrap{width:100%;max-width:640px}
+.done-hero{margin-bottom:36px}
+.done-hero .eyebrow{font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--forest-2);margin-bottom:12px}
+.done-hero h2{font-family:'Playfair Display',serif;font-size:44px;font-weight:700;color:var(--ink);line-height:1.1;margin-bottom:14px}
+.done-hero h2 em{font-style:italic;color:var(--forest)}
+.done-hero p{font-size:14.5px;color:var(--ink-2);line-height:1.7;max-width:500px}
+.done-steps{display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
+.done-step{background:var(--white);border:1px solid var(--border);border-radius:4px;padding:20px 22px;display:flex;gap:18px;align-items:flex-start;box-shadow:var(--shadow-s)}
+.done-step-num{width:34px;height:34px;border-radius:50%;background:var(--forest);color:#fff;font-size:16px;font-weight:700;font-family:'Playfair Display',serif;font-style:italic;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.done-step-body{flex:1}
+.done-step-title{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:5px}
+.done-step-desc{font-size:13px;color:var(--ink-2);line-height:1.6}
+.btn-download{display:inline-flex;align-items:center;gap:8px;margin-top:12px;padding:11px 20px;background:var(--forest);color:#fff;border:none;border-radius:3px;font-family:'Outfit',sans-serif;font-size:12.5px;font-weight:500;cursor:pointer;transition:background .2s,box-shadow .2s;letter-spacing:.04em}
+.btn-download:hover{background:var(--forest-2);box-shadow:var(--shadow-m)}
+.email-chip{display:inline-block;margin-top:10px;font-size:15px;font-weight:500;color:var(--forest);text-decoration:none;border-bottom:2px solid var(--forest-3);padding-bottom:2px;transition:border-color .2s;word-break:break-all}
+.email-chip:hover{border-color:var(--forest)}
+.done-preview{border:1px solid var(--border);border-radius:4px;overflow:hidden;background:var(--white);margin-bottom:16px}
+.done-preview summary{padding:12px 18px;font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);cursor:pointer;user-select:none;transition:background .15s}
+.done-preview[open] summary{border-bottom:1px solid var(--border);background:var(--stone)}
+.done-preview summary:hover{background:var(--stone)}
+.preview-csv{padding:14px 18px;font-family:'Courier New',monospace;font-size:11px;color:var(--ink-2);white-space:pre;overflow-x:auto;max-height:200px;overflow-y:auto;background:var(--stone);line-height:1.6}
+.btn-restart{padding:10px 20px;background:transparent;color:var(--ink-3);border:1.5px solid var(--border);border-radius:3px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;letter-spacing:.04em}
+.btn-restart:hover{border-color:var(--ink-3);color:var(--ink)}
+
+/* Spinner */
+.done-spinner-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:40px 0}
+.done-spinner{width:44px;height:44px;border:3px solid var(--forest-3);border-top-color:var(--forest);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.done-spinner-label{font-size:13px;color:var(--ink-3)}
+
+/* Success box */
+.done-success-box{display:flex;align-items:center;gap:16px;background:var(--forest-3);border:1.5px solid var(--forest);border-radius:4px;padding:18px 20px;margin-bottom:8px}
+.done-success-icon{flex-shrink:0}
+.done-success-title{font-size:14px;font-weight:600;color:var(--forest);margin-bottom:3px}
+.done-success-desc{font-size:13px;color:var(--forest-2)}
+
+/* Error box */
+.done-error-box{background:var(--rust-2);border:1.5px solid var(--rust);border-radius:4px;padding:16px 20px;margin-bottom:4px}
+.done-error-title{font-size:13px;font-weight:600;color:var(--rust);margin-bottom:4px}
+.done-error-desc{font-size:13px;color:var(--ink-2);line-height:1.55}
+
+/* ════════════════════════════════
+   DEMOGRAPHICS SCREEN
+════════════════════════════════ */
+#demographics{min-height:100vh}
+#demographics.active{display:block!important}
+
+.demo-toolbar{position:sticky;top:0;z-index:200;background:var(--white);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow-s)}
+.demo-toolbar-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--forest)}
+.demo-toolbar-title span{font-weight:400;font-style:italic;color:var(--ink-3);font-size:13px;margin-left:8px}
+
+.demo-hero{background:var(--forest);padding:32px 28px 26px;color:#fff}
+.demo-hero .eyebrow{font-size:10px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:10px}
+.demo-hero h2{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;line-height:1.2;margin-bottom:8px}
+.demo-hero p{font-size:13.5px;color:rgba(255,255,255,.75);line-height:1.6;max-width:600px}
+
+.demo-body{padding:24px 20px 48px;max-width:680px;margin:0 auto}
+.demo-required-note{font-size:12px;color:var(--rust);margin-bottom:24px;font-weight:500}
+
+.demo-field{background:var(--white);border:1px solid var(--border);border-radius:4px;padding:22px 24px;margin-bottom:14px;box-shadow:var(--shadow-s)}
+.demo-field-label{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.demo-field-label .req{color:var(--rust);font-size:13px;line-height:1;font-weight:400}
+.demo-field-question{font-family:'Playfair Display',serif;font-size:15px;font-weight:400;color:var(--ink);line-height:1.5;margin-bottom:14px}
+.demo-field-question .dutch-note{display:block;font-family:'Outfit',sans-serif;font-size:12px;font-weight:400;font-style:normal;color:var(--forest-2);margin-top:4px}
+
+/* Radio / option buttons */
+.demo-options{display:flex;flex-direction:column;gap:8px}
+.demo-option{display:flex;align-items:center;gap:12px;padding:10px 14px;border:1.5px solid var(--border);border-radius:3px;cursor:pointer;transition:border-color .15s,background .15s;font-size:13.5px;color:var(--ink);font-weight:400;background:var(--stone)}
+.demo-option:hover{border-color:var(--forest-2);background:var(--forest-3)}
+.demo-option input[type=radio]{accent-color:var(--forest);width:16px;height:16px;flex-shrink:0;cursor:pointer}
+.demo-option.selected{border-color:var(--forest);background:var(--forest-3);color:var(--forest);font-weight:500}
+
+/* Text input */
+.demo-text-input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:3px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:400;color:var(--ink);background:var(--stone);outline:none;transition:border-color .2s,background .2s}
+.demo-text-input:focus{border-color:var(--forest);background:var(--white)}
+.demo-text-input::placeholder{color:var(--ink-3)}
+.demo-text-input.invalid,.demo-option-group.invalid .demo-options{outline:2px solid var(--rust);outline-offset:2px;border-radius:4px}
+
+.demo-error{display:none;font-size:11.5px;color:var(--rust);margin-top:8px;font-weight:500}
+.demo-error.visible{display:block}
+
+.demo-footer{position:sticky;bottom:0;background:var(--white);border-top:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:flex-end;box-shadow:0 -4px 16px rgba(28,25,22,.07)}
+.btn-demo-continue{padding:13px 30px;background:var(--forest);color:#fff;border:none;border-radius:3px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;letter-spacing:.05em;cursor:pointer;transition:background .2s,box-shadow .2s;display:flex;align-items:center;gap:8px}
+.btn-demo-continue:hover{background:var(--forest-2);box-shadow:var(--shadow-m)}
+</style>
+</head>
+<body>
+
+<!-- ══════ INTRO ══════ -->
+<div id="intro" class="screen active">
+  <div class="intro-wrap">
+    <div class="intro-left">
+      <div>
+        <div class="intro-eyebrow">Q-Methodology Study · Hogeschool Utrecht</div>
+        <h1>Barriers to<br><em>Circular<br>Construction</em></h1>
+      </div>
+      <div class="researcher">
+        <strong>IJse Dubbeldam</strong><br>
+        Master Project Management<br>
+        Hogeschool Utrecht
+      </div>
+    </div>
+    <div class="intro-right">
+      <div>
+        <div class="intro-section-label">Research question</div>
+        <div class="research-q">
+          <p>"What are the main barriers to circular construction as perceived by project developers, and how are responsibility and blame distributed among the actors involved?"</p>
+        </div>
+      </div>
+      <div class="intro-divider"></div>
+      <div>
+        <div class="intro-section-label">About this study</div>
+        <p class="intro-body-text">You will sort 35 statements about barriers to circular construction. There are no right or wrong answers — your professional perspective is what matters.</p>
+      </div>
+      <div>
+        <div class="intro-section-label">How it works</div>
+        <div class="intro-steps">
+          <div class="intro-step"><div class="intro-step-num">1</div><div class="intro-step-text">Sort all 35 statements into three rough piles: <strong>Disagree, Neutral, Agree</strong></div></div>
+          <div class="intro-step"><div class="intro-step-num">2</div><div class="intro-step-text">Refine your sort by placing each card on the <strong>−4 to +4 grid</strong></div></div>
+          <div class="intro-step"><div class="intro-step-num">3</div><div class="intro-step-text">Answer <strong>4 short questions</strong>, then your results are sent automatically</div></div>
+        </div>
+      </div>
+      <div class="intro-divider"></div>
+      <div class="code-field">
+        <label class="code-label" for="participantCode">Participant code</label>
+        <input type="text" id="participantCode" class="code-input" placeholder="Enter your code…" autocomplete="off" onkeydown="if(event.key==='Enter')beginWithCode()">
+        <div class="code-error" id="codeError">Incorrect code. Please try again.</div>
+      </div>
+      <button class="btn-begin" onclick="beginWithCode()">Begin Q-Sort <span>→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ DEMOGRAPHICS ══════ -->
+<div id="demographics" class="screen">
+  <div class="demo-toolbar">
+    <button class="btn-back" onclick="showScreen('intro')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button>
+    <div class="demo-toolbar-title">Q-Sort <span>Background information</span></div>
+    <div style="font-size:11px;color:var(--ink-3)">5 questions</div>
+  </div>
+
+  <div class="demo-hero">
+    <div class="eyebrow">Before you begin</div>
+    <h2>A few background questions</h2>
+    <p>Please answer all five questions below. Your responses are anonymous and will only be used for research purposes. / Uw antwoorden zijn anoniem en worden uitsluitend gebruikt voor onderzoeksdoeleinden.</p>
+  </div>
+
+  <div class="demo-body">
+    <div class="demo-required-note">* All questions are required / Alle vragen zijn verplicht</div>
+
+    <!-- Q1: Gender -->
+    <div class="demo-field">
+      <div class="demo-field-label">Question 1 of 5 <span class="req">*</span></div>
+      <div class="demo-field-question">What is your gender?
+        <span class="dutch-note">Wat is uw geslacht?</span>
+      </div>
+      <div class="demo-options demo-option-group" id="optGender">
+        <label class="demo-option"><input type="radio" name="gender" value="Male"> Male / Man</label>
+        <label class="demo-option"><input type="radio" name="gender" value="Female"> Female / Vrouw</label>
+        <label class="demo-option"><input type="radio" name="gender" value="Prefer not to disclose"> Prefer not to disclose / Zeg ik liever niet</label>
+      </div>
+      <div class="demo-error" id="errGender">Please select an option. / Selecteer een antwoord.</div>
+    </div>
+
+    <!-- Q2: Age -->
+    <div class="demo-field">
+      <div class="demo-field-label">Question 2 of 5 <span class="req">*</span></div>
+      <div class="demo-field-question">What is your age?
+        <span class="dutch-note">Wat is uw leeftijd?</span>
+      </div>
+      <div class="demo-options demo-option-group" id="optAge">
+        <label class="demo-option"><input type="radio" name="age" value="24 years or younger"> 24 years or younger / 24 jaar of jonger</label>
+        <label class="demo-option"><input type="radio" name="age" value="25–34"> 25–34</label>
+        <label class="demo-option"><input type="radio" name="age" value="35–44"> 35–44</label>
+        <label class="demo-option"><input type="radio" name="age" value="45–54"> 45–54</label>
+        <label class="demo-option"><input type="radio" name="age" value="55–64"> 55–64</label>
+        <label class="demo-option"><input type="radio" name="age" value="65 years or older"> 65 years or older / 65 jaar of ouder</label>
+      </div>
+      <div class="demo-error" id="errAge">Please select an option. / Selecteer een antwoord.</div>
+    </div>
+
+    <!-- Q3: Company -->
+    <div class="demo-field">
+      <div class="demo-field-label">Question 3 of 5 <span class="req">*</span></div>
+      <div class="demo-field-question">Which company do you work for?
+        <span class="dutch-note">Bij welk bedrijf bent u werkzaam?</span>
+      </div>
+      <input type="text" id="demoCompany" class="demo-text-input" placeholder="Company name / Bedrijfsnaam">
+      <div class="demo-error" id="errDemoCompany">Please fill in your company name. / Vul uw bedrijfsnaam in.</div>
+    </div>
+
+    <!-- Q4: Position -->
+    <div class="demo-field">
+      <div class="demo-field-label">Question 4 of 5 <span class="req">*</span></div>
+      <div class="demo-field-question">What is your position?
+        <span class="dutch-note">Wat is uw functie?</span>
+      </div>
+      <input type="text" id="demoPosition" class="demo-text-input" placeholder="e.g. Project Developer / Projectontwikkelaar">
+      <div class="demo-error" id="errDemoPosition">Please fill in your position. / Vul uw functie in.</div>
+    </div>
+
+    <!-- Q5: Experience -->
+    <div class="demo-field">
+      <div class="demo-field-label">Question 5 of 5 <span class="req">*</span></div>
+      <div class="demo-field-question">How many years of experience do you have as a project developer?
+        <span class="dutch-note">Hoeveel jaar werkervaring heeft u als projectontwikkelaar?</span>
+      </div>
+      <div class="demo-options demo-option-group" id="optExperience">
+        <label class="demo-option"><input type="radio" name="experience" value="0–1 years"> 0–1 years / jaar</label>
+        <label class="demo-option"><input type="radio" name="experience" value="1–3 years"> 1–3 years / jaar</label>
+        <label class="demo-option"><input type="radio" name="experience" value="3–5 years"> 3–5 years / jaar</label>
+        <label class="demo-option"><input type="radio" name="experience" value="5–10 years"> 5–10 years / jaar</label>
+        <label class="demo-option"><input type="radio" name="experience" value="10–15 years"> 10–15 years / jaar</label>
+        <label class="demo-option"><input type="radio" name="experience" value="15–25 years"> 15–25 years / jaar</label>
+        <label class="demo-option"><input type="radio" name="experience" value="More than 25 years"> More than 25 years / Meer dan 25 jaar</label>
+      </div>
+      <div class="demo-error" id="errExperience">Please select an option. / Selecteer een antwoord.</div>
+    </div>
+  </div>
+
+  <div class="demo-footer">
+    <button class="btn-demo-continue" onclick="submitDemographics()">Continue → / Verder →</button>
+  </div>
+</div>
+
+<!-- ══════ OVERVIEW ══════ -->
+<div id="overview" class="screen">
+  <div class="overview-toolbar">
+    <button class="btn-back" onclick="showScreen('demographics')">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Back
+    </button>
+    <div class="overview-title">Q-Sort <span>Read all statements</span></div>
+    <div style="font-size:11px;color:var(--ink-3)">35 statements</div>
+  </div>
+  <div class="overview-hero">
+    <div class="eyebrow">Before you sort</div>
+    <h2>Read all 35 statements</h2>
+    <p>Take a moment to read through all statements before sorting. Familiarity with all the statements will help you sort more accurately.</p>
+  </div>
+  <div class="overview-body" id="overviewBody"></div>
+  <div class="overview-footer">
+    <p>Read all statements? <strong>Start sorting when you're ready.</strong></p>
+    <button class="btn-start-sort" onclick="goToPiles()">Start sorting →</button>
+  </div>
+</div>
+
+<!-- ══════ PILES ══════ -->
+<div id="piles" class="screen">
+  <div class="toolbar">
+    <div class="toolbar-brand">Q-Sort <span>Circular Construction</span></div>
+    <div class="toolbar-right">
+      <button class="btn-back" onclick="showScreen('overview')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button>
+      <div class="step-pills"><div class="step-pill w-active"></div><div class="step-pill w-idle"></div><div class="step-pill w-idle"></div></div>
+      <div class="toolbar-count">Sorted: <strong id="pilesPlacedCount">0</strong> / 35</div>
+    </div>
+  </div>
+  <div class="q-bar">"What are the main barriers to circular construction as perceived by project developers, and how are responsibility and blame distributed among the actors involved?"</div>
+  <div class="hint-bar">
+    <div class="hint-bar-icon">1</div>
+    <div class="hint-bar-body">
+      <div class="hint-bar-step">Step 1 of 2 — Rough sorting</div>
+      <div class="hint-bar-text">Drag each card into one of the three piles: <strong>Disagree</strong>, <strong>Neutral</strong>, or <strong>Agree</strong>. Place all 35 before continuing.</div>
+    </div>
+  </div>
+  <div class="piles-zones">
+    <div class="pile-zone pile-disagree" id="zone-disagree" onclick="handleZoneClick('disagree')">
+      <div class="pile-header"><span class="pile-name">Disagree</span><span class="pile-count-badge" id="count-disagree">0</span></div>
+      <div class="pile-cards" id="cards-disagree"></div>
+    </div>
+    <div class="pile-zone pile-neutral" id="zone-neutral" onclick="handleZoneClick('neutral')">
+      <div class="pile-header"><span class="pile-name">Neutral</span><span class="pile-count-badge" id="count-neutral">0</span></div>
+      <div class="pile-cards" id="cards-neutral"></div>
+    </div>
+    <div class="pile-zone pile-agree" id="zone-agree" onclick="handleZoneClick('agree')">
+      <div class="pile-header"><span class="pile-name">Agree</span><span class="pile-count-badge" id="count-agree">0</span></div>
+      <div class="pile-cards" id="cards-agree"></div>
+    </div>
+  </div>
+  <div class="progress-footer">
+    <div class="progress-track"><div class="progress-fill" id="pilesProgressFill" style="width:0%"></div></div>
+    <div class="progress-label" id="pilesProgressLabel"><strong>0</strong> / 35 sorted</div>
+    <button class="btn-continue" id="pilesContinueBtn" onclick="proceedToGrid()">Continue to grid →</button>
+  </div>
+  <div class="unsorted-section">
+    <div class="unsorted-head"><h3>Unsorted statements</h3><span class="remaining" id="pilesUnsortedCount">35 remaining</span></div>
+    <div class="unsorted-pile" id="pilesUnsortedPile"></div>
+  </div>
+</div>
+
+<!-- ══════ SORT / GRID ══════ -->
+<div id="sort" class="screen">
+  <!-- Sticky header group -->
+  <div class="toolbar">
+    <div class="toolbar-brand">Q-Sort <span>Circular Construction</span></div>
+    <div class="toolbar-right">
+      <button class="btn-back" onclick="showScreen('piles')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button>
+      <div class="step-pills"><div class="step-pill w-done"></div><div class="step-pill w-active"></div><div class="step-pill w-idle"></div></div>
+      <div class="toolbar-count">Placed: <strong id="placedCount">0</strong> / 35</div>
+    </div>
+  </div>
+  <div class="q-bar">"What are the main barriers to circular construction as perceived by project developers, and how are responsibility and blame distributed among the actors involved?"</div>
+  <div class="hint-bar">
+    <div class="hint-bar-icon">2</div>
+    <div class="hint-bar-body">
+      <div class="hint-bar-step">Step 2 of 2 — Fine sorting on the grid</div>
+      <div class="hint-bar-text" id="hintText">Drag cards from the right panel onto the grid. Drag a card onto another card to swap them. Drag back to the right panel to remove.</div>
+    </div>
+  </div>
+
+  <!-- Two-panel body: grid left, pile right, both scroll independently -->
+  <div class="sort-body">
+    <!-- LEFT: scrollable grid -->
+    <div class="sort-grid-panel">
+      <div class="scale-labels"><span>← Most disagree</span><span>Most agree →</span></div>
+      <div class="grid-scale" id="gridScale"></div>
+    </div>
+
+    <!-- RIGHT: scrollable statement pile -->
+    <div class="sort-pile-panel" id="sortPilePanel">
+      <div class="pile-panel-head">
+        <h3>Statements</h3>
+        <span class="remaining" id="unsortedCount">35 remaining</span>
+      </div>
+      <div class="pile-panel-cards" id="unsortedPile"></div>
+    </div>
+  </div>
+
+  <!-- Progress bar at the very bottom -->
+  <div class="sort-progress">
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-label" id="progressLabel"><strong>0</strong> / 35 placed</div>
+    <button class="btn-continue" id="submitBtn" onclick="submitSort()">Submit →</button>
+  </div>
+</div>
+
+<!-- ══════ QUESTIONS ══════ -->
+<div id="questions" class="screen">
+  <div class="questions-wrap">
+    <div class="questions-header">
+      <button class="btn-back" onclick="showScreen('sort')" style="margin-bottom:16px"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Back to grid</button>
+      <div class="eyebrow">Step 3 of 3 — Follow-up questions</div>
+      <h2>Almost <em>done.</em></h2>
+      <p>Please answer all three questions — they help interpret your sort. Your answers will be included in the submitted results.</p>
+      <p class="required-note">All three questions are required.</p>
+    </div>
+
+    <div class="preview-band">
+      <div class="preview-band-title">Your highest-ranked statements (+3 and +4)</div>
+      <ul class="preview-list" id="highList"></ul>
+    </div>
+    <div class="q-card">
+      <div class="q-num">Question 1 of 3 <span class="req">*</span></div>
+      <div class="q-question-text">Why did you rank these statements high? <span class="dutch-note">Je mag ook in het Nederlands antwoorden.</span></div>
+      <textarea id="answerHigh" placeholder="Describe your reasoning… / Beschrijf je redenering…"></textarea>
+      <div class="q-error" id="errHigh">Please answer this question before continuing.</div>
+    </div>
+    <div class="preview-band" style="margin-top:20px">
+      <div class="preview-band-title">Your lowest-ranked statements (−3 and −4)</div>
+      <ul class="preview-list" id="lowList"></ul>
+    </div>
+    <div class="q-card">
+      <div class="q-num">Question 2 of 3 <span class="req">*</span></div>
+      <div class="q-question-text">Why did you rank these statements low? <span class="dutch-note">Je mag ook in het Nederlands antwoorden.</span></div>
+      <textarea id="answerLow" placeholder="Describe your reasoning… / Beschrijf je redenering…"></textarea>
+      <div class="q-error" id="errLow">Please answer this question before continuing.</div>
+    </div>
+    <div class="q-card" style="margin-top:20px">
+      <div class="q-num">Question 3 of 3 <span class="req">*</span></div>
+      <div class="q-question-text">Do you experience other barriers to circularity that were not mentioned in the statements? <span class="dutch-note">Je mag ook in het Nederlands antwoorden.</span></div>
+      <textarea id="answerOther" placeholder="Any additional barriers… / Eventuele andere barrières…" style="min-height:120px"></textarea>
+      <div class="q-error" id="errOther">Please answer this question before continuing.</div>
+    </div>
+    <button class="btn-to-done" onclick="goToDone()">Continue to submission <span>→</span></button>
+  </div>
+</div>
+
+<!-- ══════ DONE ══════ -->
+<div id="done" class="screen">
+  <div class="done-wrap">
+
+    <!-- SENDING STATE -->
+    <div id="doneSending" style="display:none">
+      <div class="done-hero">
+        <div class="eyebrow">Sending results…</div>
+        <h2>Almost<br><em>there.</em></h2>
+        <p>Your results are being sent automatically. Please wait a moment.</p>
+      </div>
+      <div class="done-spinner-wrap">
+        <div class="done-spinner"></div>
+        <div class="done-spinner-label">Sending to researcher…</div>
+      </div>
+    </div>
+
+    <!-- SUCCESS STATE -->
+    <div id="doneSuccess" style="display:none">
+      <div class="done-hero">
+        <div class="eyebrow">Q-Sort complete</div>
+        <h2>Thank<br><em>you!</em></h2>
+        <p>Your results have been sent automatically to the researcher. You don't need to do anything else — you're done!</p>
+      </div>
+      <div class="done-success-box">
+        <div class="done-success-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="13" stroke="var(--forest)" stroke-width="1.5"/><path d="M8 14l4 4 8-8" stroke="var(--forest)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <div class="done-success-title">Results sent successfully</div>
+          <div class="done-success-desc">Sent to <strong>ijse.dubbeldam@student.hu.nl</strong></div>
+        </div>
+      </div>
+      <details class="done-preview" style="margin-top:20px">
+        <summary>Preview your results</summary>
+        <div class="preview-csv" id="copyArea"></div>
+      </details>
+      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+        <button class="btn-download" onclick="downloadCSV()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Download backup (.csv)
+        </button>
+        <button class="btn-restart" onclick="resetSort()">← Start over</button>
+      </div>
+    </div>
+
+    <!-- ERROR STATE -->
+    <div id="doneError" style="display:none">
+      <div class="done-hero">
+        <div class="eyebrow">Sending failed</div>
+        <h2>Almost<br><em>done.</em></h2>
+        <p>The automatic submission didn't work (no internet connection?). Please download your results and e-mail them manually.</p>
+      </div>
+      <div class="done-error-box">
+        <div class="done-error-title">⚠ Automatic sending failed</div>
+        <div class="done-error-desc">Please use one of the options below to send your results to the researcher.</div>
+      </div>
+      <div class="done-steps" style="margin-top:16px">
+        <div class="done-step">
+          <div class="done-step-num">1</div>
+          <div class="done-step-body">
+            <div class="done-step-title">Download your results</div>
+            <div class="done-step-desc">Save a CSV file with your complete sort scores and answers.</div>
+            <button class="btn-download" onclick="downloadCSV()">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Download results (.csv)
+            </button>
+          </div>
+        </div>
+        <div class="done-step">
+          <div class="done-step-num">2</div>
+          <div class="done-step-body">
+            <div class="done-step-title">E-mail the file to the researcher</div>
+            <div class="done-step-desc">Attach the downloaded file and send to:</div>
+            <a class="email-chip" href="mailto:ijse.dubbeldam@student.hu.nl?subject=Q-Sort Results – Circular Construction">ijse.dubbeldam@student.hu.nl</a>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn-download" style="background:var(--ink-2)" onclick="retrySubmit()">↺ Try sending again</button>
+      </div>
+      <details class="done-preview" style="margin-top:16px">
+        <summary>Preview your results</summary>
+        <div class="preview-csv" id="copyAreaError"></div>
+      </details>
+      <button class="btn-restart" onclick="resetSort()" style="margin-top:12px">← Start over</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════
+const STATEMENTS = [
+  {id:"D1",  cat:"Design",      text:"Circular design is not integrated early enough in the project development phase."},
+  {id:"D2",  cat:"Design",      text:"Project developers have little influence over design choices."},
+  {id:"D3",  cat:"Design",      text:"Buildings are rarely designed for disassembly or adaptability from the start."},
+  {id:"D4",  cat:"Design",      text:"Circular design requires too much coordination between too many actors."},
+  {id:"D5",  cat:"Design",      text:"Circular design increases upfront complexity and costs in project development."},
+  {id:"PR1", cat:"Production",  text:"Construction processes are still optimized for linear, conventional building methods."},
+  {id:"PR2", cat:"Production",  text:"Circular project ambitions are often weakened when contractors and designers start to defend their own interests."},
+  {id:"PR3", cat:"Production",  text:"The supply chain is not ready to deliver circular construction on scale."},
+  {id:"PR4", cat:"Production",  text:"Production of circular buildings requires changes that project developers cannot control."},
+  {id:"PR5", cat:"Production",  text:"Fragmented responsibilities make circular production coordination impossible."},
+  {id:"M1",  cat:"Market",      text:"There is not enough market demand for circular buildings."},
+  {id:"M2",  cat:"Market",      text:"Project developers take circularity less seriously when tenants don't value it."},
+  {id:"M3",  cat:"Market",      text:"The market rewards low-cost conventional buildings, not circular ones."},
+  {id:"M4",  cat:"Market",      text:"Circular buildings are hard to sell because their benefits are not visible upfront."},
+  {id:"M5",  cat:"Market",      text:"Market uncertainty makes project developers hesitant to invest in circularity."},
+  {id:"L1",  cat:"Logistics",   text:"It is difficult to match demolition materials with new construction timing."},
+  {id:"L2",  cat:"Logistics",   text:"Project developers cannot rely on the supply chain to make circular construction easy to realize."},
+  {id:"L3",  cat:"Logistics",   text:"Logistical uncertainties make circular construction too risky for project developers."},
+  {id:"L4",  cat:"Logistics",   text:"Project developers are forced to deal with coordination problems that should be solved earlier in the chain."},
+  {id:"L5",  cat:"Logistics",   text:"Circular logistics add complexity to project planning."},
+  {id:"F1",  cat:"Financial",   text:"Circular construction has higher upfront costs that make investors hesitant."},
+  {id:"F2",  cat:"Financial",   text:"It is difficult to build a solid business case for circular projects."},
+  {id:"F3",  cat:"Financial",   text:"Investors see circularity as financially risky compared to conventional building."},
+  {id:"F4",  cat:"Financial",   text:"Circular buildings have uncertain resale or rental value."},
+  {id:"F5",  cat:"Financial",   text:"Project developers cannot afford circular solutions without financial incentives."},
+  {id:"PO1", cat:"Policy",      text:"Current building regulations do not support circular construction."},
+  {id:"PO2", cat:"Policy",      text:"Public authorities provide few clear incentives for circular projects."},
+  {id:"PO3", cat:"Policy",      text:"Policy is inconsistent, making circular project development unpredictable."},
+  {id:"PO4", cat:"Policy",      text:"Project developers cannot be expected to innovate when rules favor conventional building."},
+  {id:"PO5", cat:"Policy",      text:"Government procurement still prioritizes linear construction practices."},
+  {id:"R1",  cat:"Resources",   text:"There is a lack of circular knowledge to specify circular requirements."},
+  {id:"R2",  cat:"Resources",   text:"There are few experts who understand circular construction well enough."},
+  {id:"R3",  cat:"Resources",   text:"Circular projects require more time and resources than project developers have."},
+  {id:"R4",  cat:"Resources",   text:"Most project development teams have no experience with circularity."},
+  {id:"R5",  cat:"Resources",   text:"Circularity competes with core project goals of cost, time and quality."},
+];
+
+const CAT_COLORS = {
+  Design:"#6366f1", Production:"#f59e0b", Market:"#ec4899",
+  Logistics:"#14b8a6", Financial:"#ef4444", Policy:"#8b5cf6", Resources:"#f97316"
+};
+
+const COLUMNS = [
+  {value:-4,slots:2,color:"var(--col-n4)"},{value:-3,slots:3,color:"var(--col-n3)"},
+  {value:-2,slots:4,color:"var(--col-n2)"},{value:-1,slots:5,color:"var(--col-n1)"},
+  {value: 0,slots:7,color:"var(--col-0)"},
+  {value:+1,slots:5,color:"var(--col-p1)"},{value:+2,slots:4,color:"var(--col-p2)"},
+  {value:+3,slots:3,color:"var(--col-p3)"},{value:+4,slots:2,color:"var(--col-p4)"},
+];
+
+// ═══════════════════════════════════════════
+//  STATE  — placements is the single source of truth
+//  placements : { stmtId -> {ci, si} }   cards on the grid
+//  Everything else is derived/rendered from this
+// ═══════════════════════════════════════════
+let placements      = {};   // stmtId -> {ci, si}
+let pilePlacements  = {};   // stmtId -> 'disagree'|'neutral'|'agree'
+let selectedId      = null;
+let pilesSelectedId = null;
+let orderedStatements = [];
+
+const ACCESS_CODE = '2020550';
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ═══════════════════════════════════════════
+//  INTRO / CODE
+// ═══════════════════════════════════════════
+function beginWithCode() {
+  const input = document.getElementById('participantCode');
+  const error = document.getElementById('codeError');
+  if (input.value.trim() !== ACCESS_CODE) {
+    input.classList.add('invalid');
+    error.classList.add('visible');
+    input.focus();
+    return;
+  }
+  input.classList.remove('invalid');
+  error.classList.remove('visible');
+  setupDemoRadioHighlights();
+  showScreen('demographics');
+}
+
+// Highlight selected radio options visually
+function setupDemoRadioHighlights() {
+  document.querySelectorAll('.demo-option input[type=radio]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const group = radio.closest('.demo-options');
+      group.querySelectorAll('.demo-option').forEach(opt => opt.classList.remove('selected'));
+      radio.closest('.demo-option').classList.add('selected');
+      // Clear error on selection
+      const errId = 'err' + group.id.replace('opt','');
+      document.getElementById(errId)?.classList.remove('visible');
+      group.style.outline = '';
+    });
+  });
+}
+
+function submitDemographics() {
+  let ok = true;
+
+  // Validate radio groups
+  [['gender','errGender'],['age','errAge'],['experience','errExperience']].forEach(([name, errId]) => {
+    const selected = document.querySelector(`input[name="${name}"]:checked`);
+    const err      = document.getElementById(errId);
+    const group    = document.getElementById('opt'+name.charAt(0).toUpperCase()+name.slice(1));
+    if (!selected) {
+      err.classList.add('visible');
+      if (group) group.style.outline = '2px solid var(--rust)';
+      ok = false;
+    } else {
+      err.classList.remove('visible');
+      if (group) group.style.outline = '';
+    }
+  });
+
+  // Validate text fields
+  [['demoCompany','errDemoCompany'],['demoPosition','errDemoPosition']].forEach(([inputId, errId]) => {
+    const inp = document.getElementById(inputId);
+    const err = document.getElementById(errId);
+    if (!inp.value.trim()) {
+      inp.classList.add('invalid'); err.classList.add('visible'); ok = false;
+    } else {
+      inp.classList.remove('invalid'); err.classList.remove('visible');
+    }
+  });
+
+  if (!ok) {
+    // Scroll to first error
+    document.querySelector('.demo-error.visible')?.closest('.demo-field')
+      ?.scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+
+  buildOverview();
+  showScreen('overview');
+}
+
+// ═══════════════════════════════════════════
+//  OVERVIEW
+// ═══════════════════════════════════════════
+function buildOverview() {
+  const body = document.getElementById('overviewBody');
+  body.innerHTML = '';
+  ['Design','Production','Market','Logistics','Financial','Policy','Resources'].forEach(cat => {
+    const stmts = STATEMENTS.filter(s => s.cat === cat);
+    if (!stmts.length) return;
+    const group = document.createElement('div');
+    group.className = 'overview-cat-group';
+    group.innerHTML = `<div class="overview-cat-header">
+      <span class="overview-cat-dot" style="background:${CAT_COLORS[cat]}"></span>
+      <span class="overview-cat-name">${cat}</span>
+      <span class="overview-cat-count">${stmts.length} statements</span></div>`;
+    const list = document.createElement('div');
+    list.className = 'overview-stmts';
+    stmts.forEach(s => {
+      const row = document.createElement('div');
+      row.className = 'overview-stmt';
+      row.innerHTML = `<span class="overview-stmt-id">${s.id}</span><span class="overview-stmt-text">${s.text}</span>`;
+      list.appendChild(row);
+    });
+    group.appendChild(list);
+    body.appendChild(group);
+  });
+}
+
+function goToPiles() {
+  orderedStatements = shuffle(STATEMENTS);
+  pilePlacements = {};
+  pilesSelectedId = null;
+  buildPilesScreen();
+  showScreen('piles');
+}
+
+// ═══════════════════════════════════════════
+//  PILES SCREEN
+// ═══════════════════════════════════════════
+function buildPilesScreen() {
+  document.getElementById('pilesUnsortedPile').innerHTML = '';
+  ['cards-disagree','cards-neutral','cards-agree'].forEach(id => document.getElementById(id).innerHTML = '');
+  ['disagree','neutral','agree'].forEach(z => document.getElementById('count-'+z).textContent = '0');
+  orderedStatements.forEach(stmt => {
+    document.getElementById('pilesUnsortedPile').appendChild(makePileCard(stmt));
+  });
+  updatePilesProgress();
+  setTimeout(setupPilesDrag, 0);
+}
+
+function makePileCard(stmt) {
+  const card = document.createElement('div');
+  card.className = 'stmt-card';
+  card.dataset.id = stmt.id;
+  card.draggable = true;
+  card.style.cssText = `border-top-color:${CAT_COLORS[stmt.cat]};border-top-width:3px`;
+  card.innerHTML = `<div class="stmt-id"><span class="cat-dot" style="background:${CAT_COLORS[stmt.cat]}"></span>${stmt.id}</div><div class="stmt-text">${stmt.text}</div>`;
+  card.addEventListener('dragstart', e => {
+    e.dataTransfer.setData('text/plain', stmt.id);
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => card.classList.add('dragging'), 0);
+  });
+  card.addEventListener('dragend', () => {
+    card.classList.remove('dragging');
+    clearPileHighlights();
+  });
+  card.addEventListener('click', e => { e.stopPropagation(); handlePileCardClick(stmt.id); });
+  return card;
+}
+
+function setupPilesDrag() {
+  ['disagree','neutral','agree'].forEach(zone => {
+    const el = document.getElementById('zone-'+zone);
+    // Remove old listeners by cloning
+    const fresh = el.cloneNode(true);
+    el.parentNode.replaceChild(fresh, el);
+    fresh.addEventListener('dragover', e => { e.preventDefault(); fresh.classList.add('drop-active'); });
+    fresh.addEventListener('dragleave', e => { if (!fresh.contains(e.relatedTarget)) fresh.classList.remove('drop-active'); });
+    fresh.addEventListener('drop', e => {
+      e.preventDefault();
+      fresh.classList.remove('drop-active');
+      const id = e.dataTransfer.getData('text/plain');
+      if (id) dropOnPileZone(id, zone);
+    });
+    fresh.addEventListener('click', () => handleZoneClick(zone));
+  });
+
+  const unsorted = document.getElementById('pilesUnsortedPile');
+  unsorted.addEventListener('dragover', e => e.preventDefault());
+  unsorted.addEventListener('drop', e => {
+    e.preventDefault();
+    const id = e.dataTransfer.getData('text/plain');
+    if (id && pilePlacements[id]) returnToPilesUnsorted(id);
+  });
+}
+
+function handlePileCardClick(id) {
+  pilesSelectedId = pilesSelectedId === id ? null : id;
+  updatePilesSelection();
+}
+
+function handleZoneClick(zone) {
+  if (!pilesSelectedId) return;
+  dropOnPileZone(pilesSelectedId, zone);
+}
+
+function dropOnPileZone(id, zone) {
+  const oldZone = pilePlacements[id];
+  // Remove from current location
+  if (oldZone) {
+    document.querySelector(`#cards-${oldZone} .stmt-card[data-id="${id}"]`)?.remove();
+    incPileCount(oldZone, -1);
+    delete pilePlacements[id];
+  } else {
+    document.querySelector(`#pilesUnsortedPile .stmt-card[data-id="${id}"]`)?.remove();
+  }
+  // Same zone = return to unsorted
+  if (oldZone === zone) {
+    const stmt = STATEMENTS.find(s => s.id === id);
+    document.getElementById('pilesUnsortedPile').appendChild(makePileCard(stmt));
+  } else {
+    pilePlacements[id] = zone;
+    const stmt = STATEMENTS.find(s => s.id === id);
+    document.getElementById('cards-'+zone).appendChild(makePileCard(stmt));
+    incPileCount(zone, +1);
+  }
+  pilesSelectedId = null;
+  updatePilesSelection();
+  updatePilesProgress();
+}
+
+function returnToPilesUnsorted(id) {
+  const zone = pilePlacements[id];
+  if (!zone) return;
+  document.querySelector(`#cards-${zone} .stmt-card[data-id="${id}"]`)?.remove();
+  incPileCount(zone, -1);
+  delete pilePlacements[id];
+  document.getElementById('pilesUnsortedPile').appendChild(makePileCard(STATEMENTS.find(s=>s.id===id)));
+  updatePilesProgress();
+}
+
+function incPileCount(zone, delta) {
+  const el = document.getElementById('count-'+zone);
+  el.textContent = parseInt(el.textContent||'0') + delta;
+}
+
+function clearPileHighlights() {
+  ['disagree','neutral','agree'].forEach(z => document.getElementById('zone-'+z)?.classList.remove('drop-active'));
+}
+
+function updatePilesSelection() {
+  document.querySelectorAll('#piles .stmt-card').forEach(c =>
+    c.classList.toggle('selected', c.dataset.id === pilesSelectedId));
+  ['disagree','neutral','agree'].forEach(z => {
+    const el = document.getElementById('zone-'+z);
+    if (el) el.classList.toggle('drop-active', !!pilesSelectedId);
+  });
+}
+
+function updatePilesProgress() {
+  const placed = Object.keys(pilePlacements).length;
+  document.getElementById('pilesPlacedCount').textContent = placed;
+  document.getElementById('pilesUnsortedCount').textContent = (35-placed)+' remaining';
+  document.getElementById('pilesProgressLabel').innerHTML = `<strong>${placed}</strong> / 35 sorted`;
+  document.getElementById('pilesProgressFill').style.width = (placed/35*100)+'%';
+  document.getElementById('pilesContinueBtn').classList.toggle('ready', placed===35);
+}
+
+// ═══════════════════════════════════════════
+//  GRID SCREEN
+// ═══════════════════════════════════════════
+function proceedToGrid() {
+  if (Object.keys(pilePlacements).length < 35) return;
+  placements  = {};
+  selectedId  = null;
+  buildGrid();
+  rebuildGridDOM();      // draws empty grid + populates pile panel
+  showScreen('sort');
+}
+
+function buildGrid() {
+  const grid = document.getElementById('gridScale');
+  grid.innerHTML = '';
+  COLUMNS.forEach((col, ci) => {
+    const colDiv = document.createElement('div');
+    colDiv.className = 'grid-col';
+    const val = col.value > 0 ? '+'+col.value : String(col.value);
+    colDiv.innerHTML = `<div class="col-head">
+      <span class="col-val" style="color:${col.color}">${val}</span>
+      <span class="col-n">${col.slots}</span>
+      ${col.value===-4?'<span class="col-lbl">Most<br>disagree</span>':''}
+      ${col.value===+4?'<span class="col-lbl">Most<br>agree</span>':''}
+    </div>`;
+    for (let si = 0; si < col.slots; si++) {
+      const slot = document.createElement('div');
+      slot.className = 'grid-slot';
+      slot.dataset.ci = ci;
+      slot.dataset.si = si;
+      slot.style.borderColor = col.color+'55';
+      colDiv.appendChild(slot);
+    }
+    grid.appendChild(colDiv);
+  });
+}
+
+// ─────────────────────────────────────────
+//  SINGLE REDRAW FUNCTION — the ONLY place DOM is modified for grid/pile
+//  Derives everything from `placements` (source of truth)
+// ─────────────────────────────────────────
+function rebuildGridDOM() {
+  // 1. Which IDs are placed?
+  const placedSet = new Set(Object.keys(placements));
+
+  // 2. Redraw every grid slot
+  document.querySelectorAll('.grid-slot').forEach(slot => {
+    const ci = parseInt(slot.dataset.ci), si = parseInt(slot.dataset.si);
+    slot.innerHTML = '';
+    slot.classList.remove('drop-target');
+    // Find card for this slot
+    const id = Object.keys(placements).find(k => placements[k].ci===ci && placements[k].si===si);
+    if (id) {
+      const card = makeGridCard(id, true);
+      slot.appendChild(card);
+    }
+    // Attach slot-level drop handlers
+    slot.ondragover = e => { e.preventDefault(); slot.classList.add('drop-target'); };
+    slot.ondragleave = e => { if (!slot.contains(e.relatedTarget)) slot.classList.remove('drop-target'); };
+    slot.ondrop = e => {
+      e.preventDefault(); e.stopPropagation();
+      slot.classList.remove('drop-target');
+      const draggedId = e.dataTransfer.getData('text/plain');
+      if (draggedId) performMove(draggedId, ci, si);
+    };
+    slot.onclick = e => { if (e.target === slot) handleSlotClick(ci, si); };
+  });
+
+  // 3. Rebuild pile panel
+  const pile = document.getElementById('unsortedPile');
+  pile.innerHTML = '';
+  ['disagree','neutral','agree'].forEach(zone => {
+    const group = orderedStatements.filter(s => pilePlacements[s.id]===zone && !placedSet.has(s.id));
+    if (!group.length) return;
+    const sep = document.createElement('div');
+    sep.className = 'pile-panel-sep';
+    sep.style.color = zone==='disagree'?'var(--col-n3)':zone==='neutral'?'var(--col-0)':'var(--col-p3)';
+    sep.textContent = zone.charAt(0).toUpperCase()+zone.slice(1);
+    pile.appendChild(sep);
+    group.forEach(stmt => pile.appendChild(makeGridCard(stmt.id, false)));
+  });
+
+  // 4. Pile panel = drop target to remove cards from grid
+  const panel = document.getElementById('sortPilePanel');
+  panel.ondragover = e => { e.preventDefault(); panel.classList.add('drop-over'); };
+  panel.ondragleave = e => { if (!panel.contains(e.relatedTarget)) panel.classList.remove('drop-over'); };
+  panel.ondrop = e => {
+    e.preventDefault();
+    panel.classList.remove('drop-over');
+    const id = e.dataTransfer.getData('text/plain');
+    if (id && placements[id]) {
+      delete placements[id];
+      rebuildGridDOM();
+      updateGridProgress();
+    }
+  };
+
+  // 5. Update selection highlights
+  updateGridSelection();
+  updateGridProgress();
+}
+
+// Make a card for use in the grid slot or pile panel
+function makeGridCard(stmtId, placed) {
+  const stmt = STATEMENTS.find(s => s.id === stmtId);
+  const card = document.createElement('div');
+  card.className = 'stmt-card' + (placed ? ' placed' : '');
+  card.dataset.id = stmtId;
+  card.draggable = true;
+  card.style.cssText = `border-top-color:${CAT_COLORS[stmt.cat]};border-top-width:3px;width:96px`;
+  if (!placed) card.style.width = '100%';
+  card.innerHTML = `<div class="stmt-id"><span class="cat-dot" style="background:${CAT_COLORS[stmt.cat]}"></span>${stmt.id}</div><div class="stmt-text">${stmt.text}</div>`;
+
+  card.addEventListener('dragstart', e => {
+    e.dataTransfer.setData('text/plain', stmtId);
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => card.classList.add('dragging'), 0);
+  });
+  card.addEventListener('dragend', () => {
+    card.classList.remove('dragging');
+    document.querySelectorAll('.grid-slot').forEach(s => s.classList.remove('drop-target'));
+    document.querySelectorAll('.stmt-card').forEach(c => c.classList.remove('drag-over-card'));
+    document.getElementById('sortPilePanel').classList.remove('drop-over');
+  });
+
+  // Cards on the grid also accept drops — drag onto card = swap
+  if (placed) {
+    card.addEventListener('dragover', e => {
+      e.preventDefault(); e.stopPropagation();
+      card.classList.add('drag-over-card');
+    });
+    card.addEventListener('dragleave', e => {
+      if (!card.contains(e.relatedTarget)) card.classList.remove('drag-over-card');
+    });
+    card.addEventListener('drop', e => {
+      e.preventDefault(); e.stopPropagation();
+      card.classList.remove('drag-over-card');
+      const draggedId = e.dataTransfer.getData('text/plain');
+      if (draggedId && draggedId !== stmtId) {
+        const p = placements[stmtId];
+        if (p) performMove(draggedId, p.ci, p.si);
+      }
+    });
+  }
+
+  card.addEventListener('click', e => { e.stopPropagation(); handleCardClick(stmtId); });
+  return card;
+}
+
+// ─────────────────────────────────────────
+//  ATOMIC MOVE — only function that mutates placements
+// ─────────────────────────────────────────
+function performMove(draggedId, toCi, toSi) {
+  if (!draggedId) return;
+
+  // Find current occupant of target slot
+  const occupantId = Object.keys(placements).find(k => placements[k].ci===toCi && placements[k].si===toSi);
+
+  if (occupantId === draggedId) return; // same slot, no-op
+
+  const fromP = placements[draggedId]; // undefined = coming from pile
+
+  if (occupantId) {
+    if (fromP) {
+      // Swap: both on grid
+      placements[draggedId]  = { ci:toCi,    si:toSi    };
+      placements[occupantId] = { ci:fromP.ci, si:fromP.si };
+    } else {
+      // Dragged from pile onto occupied slot: occupant returns to pile
+      delete placements[occupantId];
+      placements[draggedId] = { ci:toCi, si:toSi };
+    }
+  } else {
+    // Empty slot
+    if (fromP) {
+      // Move: clear old position
+      delete placements[draggedId];
+      placements[draggedId] = { ci:toCi, si:toSi };
+    } else {
+      // From pile to empty slot
+      placements[draggedId] = { ci:toCi, si:toSi };
+    }
+  }
+
+  // Redraw from state
+  rebuildGridDOM();
+  updateGridProgress();
+  const rem = 35 - Object.keys(placements).length;
+  setHint(rem===0 ? 'All 35 placed! Review your sort, then click Submit.' : `${rem} statement${rem!==1?'s':''} remaining.`);
+}
+
+// Click interactions
+function handleCardClick(stmtId) {
+  if (selectedId === stmtId) {
+    // Toggle off — if on grid, return to pile
+    if (placements[stmtId]) {
+      delete placements[stmtId];
+      rebuildGridDOM();
+      updateGridProgress();
+    }
+    selectedId = null;
+    updateGridSelection();
+    setHint('Card returned. Drag or click a slot to place it.');
+    return;
+  }
+  if (selectedId !== null) {
+    // We have another card selected — swap or place
+    if (placements[stmtId]) {
+      // Both on grid: swap
+      const aP = placements[selectedId], bP = placements[stmtId];
+      if (aP) {
+        placements[selectedId] = bP;
+        placements[stmtId]     = aP;
+      } else {
+        // selected is from pile, target on grid
+        delete placements[stmtId];
+        placements[selectedId] = bP;
+      }
+      rebuildGridDOM(); updateGridProgress();
+      selectedId = null;
+      setHint(`Swapped. ${35-Object.keys(placements).length} remaining.`);
+    } else {
+      selectedId = stmtId;
+      updateGridSelection();
+    }
+    return;
+  }
+  selectedId = stmtId;
+  updateGridSelection();
+  setHint(placements[stmtId]
+    ? `"${stmtId}" selected. Click a slot to move it, or click it again to remove.`
+    : `"${stmtId}" selected. Click a grid slot to place it.`);
+}
+
+function handleSlotClick(ci, si) {
+  const occupantId = Object.keys(placements).find(k => placements[k].ci===ci && placements[k].si===si);
+  if (selectedId === null) {
+    if (occupantId) {
+      selectedId = occupantId;
+      updateGridSelection();
+      setHint(`"${occupantId}" selected. Click a slot to move, or click again to remove.`);
+    }
+    return;
+  }
+  if (occupantId === selectedId) {
+    delete placements[selectedId];
+    selectedId = null;
+    rebuildGridDOM(); updateGridProgress();
+    setHint('Card removed.');
+    return;
+  }
+  performMove(selectedId, ci, si);
+  selectedId = null;
+}
+
+function updateGridSelection() {
+  document.querySelectorAll('#sort .stmt-card').forEach(c =>
+    c.classList.toggle('selected', c.dataset.id === selectedId));
+  document.querySelectorAll('.grid-slot').forEach(slot => {
+    const ci = parseInt(slot.dataset.ci), si = parseInt(slot.dataset.si);
+    const occ = Object.keys(placements).find(k => placements[k].ci===ci && placements[k].si===si);
+    slot.classList.toggle('drop-target', !!selectedId && !occ);
+  });
+}
+
+function updateGridProgress() {
+  const placed = Object.keys(placements).length;
+  document.getElementById('placedCount').textContent = placed;
+  document.getElementById('unsortedCount').textContent = (35-placed)+' remaining';
+  document.getElementById('progressLabel').innerHTML = `<strong>${placed}</strong> / 35 placed`;
+  document.getElementById('progressFill').style.width = (placed/35*100)+'%';
+  document.getElementById('submitBtn').classList.toggle('ready', placed===35);
+}
+
+function setHint(msg) {
+  const el = document.getElementById('hintText');
+  if (el) el.textContent = msg;
+}
+
+function submitSort() {
+  if (Object.keys(placements).length < 35) return;
+  buildQuestionPreviews();
+  showScreen('questions');
+}
+
+// ═══════════════════════════════════════════
+//  QUESTIONS
+// ═══════════════════════════════════════════
+function buildQuestionPreviews() {
+  const high=[], low=[];
+  STATEMENTS.forEach(stmt => {
+    const p = placements[stmt.id]; if (!p) return;
+    const v = COLUMNS[p.ci].value;
+    if (v>=3)  high.push({id:stmt.id,text:stmt.text,score:v});
+    if (v<=-3) low.push({id:stmt.id,text:stmt.text,score:v});
+  });
+  high.sort((a,b)=>b.score-a.score); low.sort((a,b)=>a.score-b.score);
+  function renderList(el, items) {
+    el.innerHTML = '';
+    items.forEach(s => {
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="pid">${s.id} (${s.score>0?'+'+s.score:s.score})</span><span>${s.text}</span>`;
+      el.appendChild(li);
+    });
+    if (!items.length) el.innerHTML = '<li style="color:var(--ink-3);font-style:italic;font-size:12px;">None in this range.</li>';
+  }
+  renderList(document.getElementById('highList'), high);
+  renderList(document.getElementById('lowList'), low);
+}
+
+function goToDone() {
+  const vals = ['answerHigh','answerLow','answerOther'].map(id => document.getElementById(id).value.trim());
+  let ok = true;
+  ['answerHigh','answerLow','answerOther'].forEach((id,i) => {
+    const inp = document.getElementById(id);
+    const err = document.getElementById(['errHigh','errLow','errOther'][i]);
+    if (!vals[i]) { inp.classList.add('invalid'); err.classList.add('visible'); ok=false; }
+    else          { inp.classList.remove('invalid'); err.classList.remove('visible'); }
+  });
+  if (!ok) {
+    document.querySelector('.q-card textarea.invalid')?.scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+  buildResults();
+  showScreen('done');
+  showDoneState('sending');
+  submitToFormspree();
+}
+
+// Helper: read all demographics from DOM
+function getDemographics() {
+  return {
+    gender:     document.querySelector('input[name="gender"]:checked')?.value     || '',
+    age:        document.querySelector('input[name="age"]:checked')?.value        || '',
+    company:    document.getElementById('demoCompany')?.value.trim()              || '',
+    position:   document.getElementById('demoPosition')?.value.trim()            || '',
+    experience: document.querySelector('input[name="experience"]:checked')?.value || '',
+  };
+}
+
+// ─── FORMSPREE ───────────────────────────────────────────────────
+const FORMSPREE_URL = 'https://formspree.io/f/mvznarpk';
+
+function showDoneState(state) {
+  ['doneSending','doneSuccess','doneError'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById('done'+state.charAt(0).toUpperCase()+state.slice(1)).style.display = 'block';
+}
+
+async function submitToFormspree() {
+  try {
+    const ts   = new Date().toISOString();
+    const demo = getDemographics();
+    const rows = STATEMENTS.map(s => {
+      const p = placements[s.id];
+      return `${s.id},${p?COLUMNS[p.ci].value:'?'},${s.cat}`;
+    }).join('\n');
+
+    const body = new FormData();
+    body.append('_subject',       `Q-Sort Results – ${demo.company} – ${ts.slice(0,10)}`);
+    body.append('timestamp',      ts);
+    body.append('gender',         demo.gender);
+    body.append('age',            demo.age);
+    body.append('company',        demo.company);
+    body.append('position',       demo.position);
+    body.append('experience',     demo.experience);
+    body.append('scores',         rows);
+    body.append('q1_high_ranked',    document.getElementById('answerHigh').value.trim());
+    body.append('q2_low_ranked',     document.getElementById('answerLow').value.trim());
+    body.append('q3_other_barriers', document.getElementById('answerOther').value.trim());
+    body.append('full_csv',       window._csvData || '');
+
+    const res = await fetch(FORMSPREE_URL, {
+      method:  'POST',
+      body,
+      headers: { 'Accept': 'application/json' }
+    });
+
+    if (res.ok) {
+      showDoneState('success');
+    } else {
+      console.error('Formspree error', res.status);
+      showDoneState('error');
+      document.getElementById('copyAreaError').textContent = window._csvData || '';
+    }
+  } catch(err) {
+    console.error('Submit failed', err);
+    showDoneState('error');
+    document.getElementById('copyAreaError').textContent = window._csvData || '';
+  }
+}
+
+function retrySubmit() {
+  showDoneState('sending');
+  submitToFormspree();
+}
+
+function buildResults() {
+  const ts   = new Date().toISOString();
+  const demo = getDemographics();
+  const [h,l,o] = ['answerHigh','answerLow','answerOther'].map(id => document.getElementById(id).value.trim());
+  const rows = STATEMENTS.map(s => {
+    const p = placements[s.id];
+    return {id:s.id, cat:s.cat, score:p?COLUMNS[p.ci].value:'?', text:s.text};
+  }).sort((a,b) => b.score - a.score);
+
+  let csv = `Timestamp,${ts}\n`;
+  csv += `Gender,${demo.gender}\n`;
+  csv += `Age,${demo.age}\n`;
+  csv += `Company,${demo.company}\n`;
+  csv += `Position,${demo.position}\n`;
+  csv += `Experience,${demo.experience}\n`;
+  csv += `\nID,Score,Category,Statement\n`;
+  rows.forEach(r => { csv += `${r.id},${r.score},${r.cat},"${r.text}"\n`; });
+  csv += `\nQ1 – Why did you rank the high-ranked statements high?\n${h}\n`;
+  csv += `\nQ2 – Why did you rank the low-ranked statements low?\n${l}\n`;
+  csv += `\nQ3 – Other barriers not mentioned in the statements:\n${o}\n`;
+
+  document.getElementById('copyArea').textContent = csv;
+  window._csvData = csv;
+}
+
+function downloadCSV() {
+  const blob = new Blob([window._csvData||''],{type:'text/csv;charset=utf-8;'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href=url; a.download=`qsort_results_${Date.now()}.csv`; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function resetSort() {
+  placements={}; pilePlacements={}; selectedId=null; pilesSelectedId=null;
+  orderedStatements = shuffle(STATEMENTS);
+
+  // Clear demographics
+  document.querySelectorAll('input[type=radio]').forEach(r => r.checked = false);
+  document.querySelectorAll('.demo-option').forEach(o => o.classList.remove('selected'));
+  document.querySelectorAll('.demo-options').forEach(g => g.style.outline = '');
+  ['demoCompany','demoPosition'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.value=''; el.classList.remove('invalid'); }
+  });
+  ['errGender','errAge','errDemoCompany','errDemoPosition','errExperience'].forEach(id =>
+    document.getElementById(id)?.classList.remove('visible'));
+
+  // Clear follow-up answers
+  ['answerHigh','answerLow','answerOther'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.value=''; el.classList.remove('invalid'); }
+  });
+  ['errHigh','errLow','errOther'].forEach(id =>
+    document.getElementById(id)?.classList.remove('visible'));
+
+  // Clear participant code
+  const ci = document.getElementById('participantCode');
+  if (ci) { ci.value=''; ci.classList.remove('invalid'); }
+  document.getElementById('codeError').classList.remove('visible');
+
+  showScreen('intro');
+}
+</script>
+</body>
+</html>
